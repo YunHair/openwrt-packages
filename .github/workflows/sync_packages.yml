@@ -140,8 +140,9 @@ jobs:
               echo "源目录 $source_path 不存在，跳过此目录同步"
             fi
           fi
-
+        
           rm -rf "$TEMP_CLONE_DIR"
+          echo " $package_name 同步成功"
         done
 
     - name: 添加、提交并推送更改
