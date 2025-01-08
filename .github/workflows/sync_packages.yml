@@ -115,7 +115,7 @@ jobs:
           TEMP_CLONE_DIR="$TARGET_DIR/temp-clone-$RANDOM-$package_name"
           TARGET_PATH="$TARGET_DIR/$target_path"
 
-          echo "开始同步 $package_name"
+          echo "开始同步 $package_name ，目标目录：$target_path"
 
           # 克隆源仓库并同步文件
           if git ls-remote "https://$GITHUB_TOKEN@github.com/$source_repo.git" &> /dev/null; then
@@ -142,7 +142,7 @@ jobs:
           fi
         
           rm -rf "$TEMP_CLONE_DIR"
-          echo "目标目录 $target_path 同步成功"
+          echo "$package_name 同步成功"
         done
 
     - name: 添加、提交并推送更改
