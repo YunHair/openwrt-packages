@@ -120,6 +120,7 @@ jobs:
           # 克隆源仓库并同步文件
           if git ls-remote "https://$GITHUB_TOKEN@github.com/$source_repo.git" &> /dev/null; then
             git clone --depth 1 --branch "$source_branch" "https://$GITHUB_TOKEN@github.com/$source_repo.git" "$TEMP_CLONE_DIR"
+            echo "源仓库为 $source_repo "
           else
             echo "源仓库 $source_repo 不存在，跳过此仓库同步"
             continue
@@ -128,11 +129,13 @@ jobs:
           # 如果 source_path 为空，则同步整个仓库
           if [ -z "$source_path" ]; then
             rsync -av --exclude '.git' "$TEMP_CLONE_DIR/" "$TARGET_PATH/"
+            echo "同步整个源仓库 $source_repo "
           else
             # 检查源路径是否存在
             if [ -d "$TEMP_CLONE_DIR/$source_path" ]; then
               mkdir -p "$TARGET_PATH"
               rsync -av --delete "$TEMP_CLONE_DIR/$source_path/" "$TARGET_PATH/"
+              echo "源目录 $source_path 存在，同步此目录"
             else
               echo "源目录 $source_path 不存在，跳过此目录同步"
             fi
