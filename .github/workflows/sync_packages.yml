@@ -35,13 +35,13 @@ jobs:
         if [ ! -d "$TARGET_DIR/.git" ]; then
           cd "$TARGET_DIR"
           git init
-          git remote add origin "https://$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
-          git fetch origin "$TARGET_BRANCH"
-          git checkout -b "$TARGET_BRANCH" "origin/$TARGET_BRANCH" || true
+          git remote.add origin "https://$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
+          git.fetch origin "$TARGET_BRANCH"
+          git.checkout -b "$TARGET_BRANCH" "origin/$TARGET_BRANCH" || true
         fi
 
         cd "$TARGET_DIR"
-        git checkout "$TARGET_BRANCH" || git branch "$TARGET_BRANCH" && git checkout "$TARGET_BRANCH"
+        git.checkout "$TARGET_BRANCH" || git.branch "$TARGET_BRANCH" && git.checkout "$TARGET_BRANCH"
 
     - name: 同步软件包仓库
       run: |
@@ -117,12 +117,16 @@ jobs:
         )
 
         for repo in "${repos[@]}"; do
-          # 使用yq工具解析每个仓库配置信息，获取对应的值
-          package_name=$(echo "$repo" | yq '.package_name')
-          source_repo=$(echo "$repo" | yq '.source_repo')
-          source_branch=$(echo "$repo" | yq '.source_branch')
-          source_path=$(echo "$repo" | yq '.source_path')
-          target_path=$(echo "$repo" | yq '.target_path')
+          # 通过字符串处理方式解析package_name，找到": "后面的内容作为值（去除前后空格）
+          package_name=$(echo "$repo" | awk -F': ' '/package_name:/ {print $2}' | tr -d'')
+          # 解析source_repo
+          source_repo=$(echo "$repo" | awk -F': ' '/source_repo:/ {print $2}' | tr -d'')
+          # 解析source_branch
+          source_branch=$(echo "$repo" | awk -F': ' '/source_branch:/ {print $2}' | tr -d'')
+          # 解析source_path
+          source_path=$(echo "$repo" | awk -F': ' '/source_path:/ {print $2}' | tr -d'')
+          # 解析target_path
+          target_path=$(echo "$repo" | awk -F': ' '/target_path:/ {print $2}' | tr -d'')
 
           # 若source_path没值（不写），则代表同步整个源仓库
           if [ -z "$source_path" ]; then
@@ -170,13 +174,13 @@ jobs:
         cd "$TARGET_REPO_PATH"
         git add .
 
-        if [ -n "$(git status --porcelain)" ]; then
-          git config --local user.name "GitHub Actions"
-          git config --local user.email "github-actions@github.com"
+        if [ -n "$(git.status --porcelain)" ]; then
+          git.config --local user.name "GitHub Actions"
+          git.config --local user.email "github-actions@github.com"
           TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
           COMMIT_MSG="sync：$TIMESTAMP"
-          git commit -m "$COMMIT_MSG"
-          git push "https://$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" HEAD:"$TARGET_BRANCH"
+          git.commit -m "$COMMIT_MSG"
+          git.push "https://$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" HEAD:"$TARGET_BRANCH"
         else
           echo "没有需要提交的更改。"
         fi
