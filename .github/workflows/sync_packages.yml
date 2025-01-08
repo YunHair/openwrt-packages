@@ -142,7 +142,7 @@ jobs:
           fi
         
           rm -rf "$TEMP_CLONE_DIR"
-          echo " $package_name 同步成功"
+          echo "目标目录 $target_path 同步成功"
         done
 
     - name: 添加、提交并推送更改
