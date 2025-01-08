@@ -10,7 +10,6 @@ env:
   TARGET_BRANCH: main
   TARGET_REPO_PATH: ${{ github.workspace }}/openwrt-packages
 
-# CI权限
 permissions: write-all
 
 jobs:
@@ -52,111 +51,58 @@ jobs:
 
         # 定义表示整个源仓库的标识常量（可根据实际需求自定义命名，这里使用ENTIRE_SOURCE_REPO）
         ENTIRE_SOURCE_REPO="ALL"
-        # 每一行按顺序给出：package_name包名 source_repo来源仓库 source_branch分支 source_path源文件夹（不写时代表整个源仓库，有值时代表源仓库的文件夹名） target_path目标文件夹（不写时代表和package_name同名，有值时则为自定义目标文件夹名）
+        
         repos=(
-          - package_name: luci-app-wolplus
-            source_repo: kiddin9/kwrt-packages
-            source_branch: main
-            source_path: luci-app-wolplus
-            target_path: 
-          - package_name: luci-app-openai
-            source_repo: kiddin9/kwrt-packages
-            source_branch: main
-            source_path: luci-app-openai
-            target_path: 
-          - package_name: openai
-            source_repo: kiddin9/kwrt-packages
-            source_branch: main
-            source_path: openai
-            target_path: 
-          - package_name: luci-app-chatgpt
-            source_repo: kiddin9/kwrt-packages
-            source_branch: main
-            source_path: luci-app-chatgpt-web
-            target_path: 
-          - package_name: luci-app-timewol
-            source_repo: VIKINGYFY/packages
-            source_branch: main
-            source_path: luci-app-timewol
-            target_path: 
-          - package_name: luci-app-advancedplus
-            source_repo: YunHair/luci-app-advancedplus
-            source_branch: main
-            source_path:
-            target_path: 
-          - package_name: luci-app-onliner
-            source_repo: YunHair/luci-app-onliner
-            source_branch: main
-            source_path: 
-            target_path: 
-          - package_name: luci-app-multifrpc
-            source_repo: YunHair/luci-app-multifrpc
-            source_branch: main
-            source_path:
-            target_path: 
-          - package_name: luci-app-easymesh
-            source_repo: theosoft-git/luci-app-easymesh
-            source_branch: master
-            source_path:
-            target_path: 
-          - package_name: luci-app-tailscale
-            source_repo: asvow/luci-app-tailscale
-            source_branch: main
-            source_path:
-            target_path: 
-          - package_name: homeproxy
-            source_repo: VIKINGYFY/homeproxy
-            source_branch: main
-            source_path:
-            target_path: 
-          - package_name: luci-app-pushbot
-            source_repo: zzsj0928/luci-app-pushbot
-            source_branch: master
-            source_path:
-            target_path: 
+          { package_name: luci-app-wolplus, s_repo: kiddin9/kwrt-packages, s_branch: main, s_path: luci-app-wolplus }
+          { package_name: luci-app-openai, s_repo: kiddin9/kwrt-packages, s_branch: main, s_path: luci-app-openai }
+          { package_name: openai, s_repo: kiddin9/kwrt-packages, s_branch: main, s_path: openai }
+          { package_name: luci-app-chatgpt, s_repo: kiddin9/kwrt-packages, s_branch: main, s_path: luci-app-chatgpt-web }
+          { package_name: luci-app-timewol, s_repo: VIKINGYFY/packages, s_branch: main, s_path: luci-app-timewol }
+          { package_name: luci-app-advancedplus, s_repo: YunHair/luci-app-advancedplus, s_branch: main }
+          { package_name: luci-app-onliner, s_repo: YunHair/luci-app-onliner, s_branch: main }
+          { package_name: luci-app-multifrpc, s_repo: YunHair/luci-app-multifrpc, s_branch: main }
+          { package_name: luci-app-easymesh, s_repo: theosoft-git/luci-app-easymesh, s_branch: master }
+          { package_name: luci-app-tailscale, s_repo: asvow/luci-app-tailscale, s_branch: main }
+          { package_name: homeproxy, s_repo: VIKINGYFY/homeproxy, s_branch: main }
+          { package_name: luci-app-pushbot, s_repo: zzsj0928/luci-app-pushbot, s_branch: master }
         )
 
         for repo in "${repos[@]}"; do
-          # 通过字符串处理方式解析每个仓库配置信息，获取对应的值（修正sed命令语法格式）
-          package_name=$(echo "$repo" | sed -n 's/^[[:space:]]*-[[:space:]]*package_name:[[:space:]]*\(.*\)[[:space:]]*$/\1/p')
-          source_repo=$(echo "$repo" | sed -n 's/^[[:space:]]*-[[:space:]]*source_repo:[[:space:]]*\(.*\)[[:space:]]*$/\1/p')
-          source_branch=$(echo "$repo" | sed -n 's/^[[:space:]]*-[[:space:]]*source_branch:[[:space:]]*\(.*\)[[:space:]]*$/\1/p')
-          source_path=$(echo "$repo" | sed -n 's/^[[:space:]]*-[[:space:]]*source_path:[[:space:]]*\(.*\)[[:space:]]*$/\1/p')
-          target_path=$(echo "$repo" | sed -n 's/^[[:space:]]*-[[:space:]]*target_path:[[:space:]]*\(.*\)[[:space:]]*$/\1/p')
+          package_name=$(echo "$repo" | jq -r '.package_name')
+          s_repo=$(echo "$repo" | jq -r '.s_repo')
+          s_branch=$(echo "$repo" | jq -r '.s_branch')
+          s_path=$(echo "$repo" | jq -r '.s_path')
+          t_path=$(echo "$repo" | jq -r '.t_path')
 
-          # 若source_path没值（不写），则代表同步整个源仓库
-          if [ -z "$source_path" ]; then
-            source_path=$ENTIRE_SOURCE_REPO
-          fi
+          # 若s_path没值（不写），则代表同步整个源仓库
+          s_path=${s_path:-$ENTIRE_SOURCE_REPO}
 
-          # 若target_path没值（不写），则代表和package_name相同
-          if [ -z "$target_path" ]; then
-            target_path="$package_name"
-          fi
+          # 若t_path没值（不写），则代表和package_name相同
+          t_path=${t_path:-$package_name}
 
           TEMP_CLONE_DIR="$TARGET_DIR/temp-clone-$RANDOM-$package_name"
-          TARGET_PATH="$TARGET_DIR/$target_path"
+          TARGET_PATH="$TARGET_DIR/$t_path"
 
           echo "开始同步 $package_name"
 
           # 克隆源仓库并同步文件
-          if git ls-remote "https://$GITHUB_TOKEN@github.com/$source_repo.git" &> /dev/null; then
-            git clone --depth 1 --branch "$source_branch" "https://$GITHUB_TOKEN@github.com/$source_repo.git" "$TEMP_CLONE_DIR"
+          if git ls-remote "https://$GITHUB_TOKEN@github.com/$s_repo.git" &> /dev/null; then
+            git clone --depth 1 --branch "$s_branch" "https://$GITHUB_TOKEN@github.com/$s_repo.git" "$TEMP_CLONE_DIR"
           else
-            echo "源仓库 $source_repo 不存在，跳过此仓库同步"
+            echo "源仓库 $s_repo 不存在，跳过此仓库同步"
             continue
           fi
 
           # 检查源路径是否存在
-          if [ -d "$TEMP_CLONE_DIR/$source_path" ]; then
+          if [ -d "$TEMP_CLONE_DIR/$s_path" ]; then
             mkdir -p "$TARGET_PATH"
-            if [ "$source_path" = $ENTIRE_SOURCE_REPO ]; then
+            if [ "$s_path" = "$ENTIRE_SOURCE_REPO" ]; then
               rsync -av --exclude '.git' "$TEMP_CLONE_DIR/" "$TARGET_PATH/"
             else
-              rsync -av --delete "$TEMP_CLONE_DIR/$source_path/" "$TARGET_PATH/"
+              rsync -av --delete "$TEMP_CLONE_DIR/$s_path/" "$TARGET_PATH/"
             fi
           else
-            echo "源目录 $source_path 不存在，跳过此目录同步"
+            echo "源目录 $s_path 不存在，跳过此目录同步"
           fi
 
           rm -rf "$TEMP_CLONE_DIR"
