@@ -23,6 +23,7 @@ jobs:
         path: base-repo
         ref: ${{ env.TARGET_BRANCH }}
 
+    
     - name: 准备目标目录并初始化Git仓库（如果需要）
       run: |
         set -e
@@ -104,7 +105,7 @@ jobs:
           source_repo=$(yq e ".repos[$i].source_repo" "$repos_file")
           source_branch=$(yq e ".repos[$i].source_branch" "$repos_file")
           source_path=$(yq e ".repos[$i].source_path // \"\"" "$repos_file")  # 默认为空字符串
-          target_path=$(yq e ".repos[$i].target_path // \"$package_name\"" "$repos_file")  # 默认为 package_name
+          target_path=$(yq e ".repos[$i].target_path // \"$package_name\"" "$repos_file")  # 默认为 package_name 或空时使用 package_name
 
           TEMP_CLONE_DIR="$TARGET_DIR/temp-clone-$RANDOM-$package_name"
           TARGET_PATH="$TARGET_DIR/$target_path"
