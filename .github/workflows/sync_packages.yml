@@ -1,0 +1,182 @@
+name: sync_packages
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "40 18 * * *"
+
+env:
+  GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+  TARGET_BRANCH: main
+  TARGET_REPO_PATH: ${{ github.workspace }}/openwrt-packages
+
+# CI权限
+permissions: write-all
+
+jobs:
+  sync-packages:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 检出基础仓库
+      uses: actions/checkout@v3
+      with:
+        path: base-repo
+        ref: ${{ env.TARGET_BRANCH }}
+
+    - name: 准备目标目录并初始化Git仓库（如果需要）
+      run: |
+        set -e
+        set -x
+
+        TARGET_DIR="$TARGET_REPO_PATH"
+        mkdir -p "$TARGET_DIR"
+
+        if [ ! -d "$TARGET_DIR/.git" ]; then
+          cd "$TARGET_DIR"
+          git init
+          git remote add origin "https://$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
+          git fetch origin "$TARGET_BRANCH"
+          git checkout -b "$TARGET_BRANCH" "origin/$TARGET_BRANCH" || true
+        fi
+
+        cd "$TARGET_DIR"
+        git checkout "$TARGET_BRANCH" || git branch "$TARGET_BRANCH" && git checkout "$TARGET_BRANCH"
+
+    - name: 同步软件包仓库
+      run: |
+        set -e
+        set -x
+
+        TARGET_DIR="$TARGET_REPO_PATH"
+
+        # 定义表示整个源仓库的标识常量（可根据实际需求自定义命名，这里使用ENTIRE_SOURCE_REPO）
+        ENTIRE_SOURCE_REPO="ALL"
+        # 每一行按顺序给出：package_name包名 source_repo来源仓库 source_branch分支 source_path源文件夹（不写时代表整个源仓库，有值时代表源仓库的文件夹名） target_path目标文件夹（不写时代表和package_name同名，有值时则为自定义目标文件夹名）
+        repos=(
+          - package_name: luci-app-wolplus
+            source_repo: kiddin9/kwrt-packages
+            source_branch: main
+            source_path: luci-app-wolplus
+            target_path: 
+          - package_name: luci-app-openai
+            source_repo: kiddin9/kwrt-packages
+            source_branch: main
+            source_path: luci-app-openai
+            target_path: 
+          - package_name: openai
+            source_repo: kiddin9/kwrt-packages
+            source_branch: main
+            source_path: openai
+            target_path: 
+          - package_name: luci-app-chatgpt
+            source_repo: kiddin9/kwrt-packages
+            source_branch: main
+            source_path: luci-app-chatgpt-web
+            target_path: 
+          - package_name: luci-app-timewol
+            source_repo: VIKINGYFY/packages
+            source_branch: main
+            source_path: luci-app-timewol
+            target_path: 
+          - package_name: luci-app-advancedplus
+            source_repo: YunHair/luci-app-advancedplus
+            source_branch: main
+            source_path:
+            target_path: 
+          - package_name: luci-app-onliner
+            source_repo: YunHair/luci-app-onliner
+            source_branch: main
+            source_path: 
+            target_path: 
+          - package_name: luci-app-multifrpc
+            source_repo: YunHair/luci-app-multifrpc
+            source_branch: main
+            source_path:
+            target_path: 
+          - package_name: luci-app-easymesh
+            source_repo: theosoft-git/luci-app-easymesh
+            source_branch: master
+            source_path:
+            target_path: 
+          - package_name: luci-app-tailscale
+            source_repo: asvow/luci-app-tailscale
+            source_branch: main
+            source_path:
+            target_path: 
+          - package_name: homeproxy
+            source_repo: VIKINGYFY/homeproxy
+            source_branch: main
+            source_path:
+            target_path: 
+          - package_name: luci-app-pushbot
+            source_repo: zzsj0928/luci-app-pushbot
+            source_branch: master
+            source_path:
+            target_path: 
+        )
+
+        for repo in "${repos[@]}"; do
+          # 通过字符串处理方式解析每个仓库配置信息，获取对应的值（修正sed命令语法格式）
+          package_name=$(echo "$repo" | sed -n 's/^[[:space:]]*-[[:space:]]*package_name:[[:space:]]*\(.*\)[[:space:]]*$/\1/p')
+          source_repo=$(echo "$repo" | sed -n 's/^[[:space:]]*-[[:space:]]*source_repo:[[:space:]]*\(.*\)[[:space:]]*$/\1/p')
+          source_branch=$(echo "$repo" | sed -n 's/^[[:space:]]*-[[:space:]]*source_branch:[[:space:]]*\(.*\)[[:space:]]*$/\1/p')
+          source_path=$(echo "$repo" | sed -n 's/^[[:space:]]*-[[:space:]]*source_path:[[:space:]]*\(.*\)[[:space:]]*$/\1/p')
+          target_path=$(echo "$repo" | sed -n 's/^[[:space:]]*-[[:space:]]*target_path:[[:space:]]*\(.*\)[[:space:]]*$/\1/p')
+
+          # 若source_path没值（不写），则代表同步整个源仓库
+          if [ -z "$source_path" ]; then
+            source_path=$ENTIRE_SOURCE_REPO
+          fi
+
+          # 若target_path没值（不写），则代表和package_name相同
+          if [ -z "$target_path" ]; then
+            target_path="$package_name"
+          fi
+
+          TEMP_CLONE_DIR="$TARGET_DIR/temp-clone-$RANDOM-$package_name"
+          TARGET_PATH="$TARGET_DIR/$target_path"
+
+          echo "开始同步 $package_name"
+
+          # 克隆源仓库并同步文件
+          if git ls-remote "https://$GITHUB_TOKEN@github.com/$source_repo.git" &> /dev/null; then
+            git clone --depth 1 --branch "$source_branch" "https://$GITHUB_TOKEN@github.com/$source_repo.git" "$TEMP_CLONE_DIR"
+          else
+            echo "源仓库 $source_repo 不存在，跳过此仓库同步"
+            continue
+          fi
+
+          # 检查源路径是否存在
+          if [ -d "$TEMP_CLONE_DIR/$source_path" ]; then
+            mkdir -p "$TARGET_PATH"
+            if [ "$source_path" = $ENTIRE_SOURCE_REPO ]; then
+              rsync -av --exclude '.git' "$TEMP_CLONE_DIR/" "$TARGET_PATH/"
+            else
+              rsync -av --delete "$TEMP_CLONE_DIR/$source_path/" "$TARGET_PATH/"
+            fi
+          else
+            echo "源目录 $source_path 不存在，跳过此目录同步"
+          fi
+
+          rm -rf "$TEMP_CLONE_DIR"
+        done
+
+    - name: 添加、提交并推送更改
+      run: |
+        set -e
+        set -x
+
+        cd "$TARGET_REPO_PATH"
+        git add .
+
+        if [ -n "$(git status --porcelain)" ]; then
+          git config --local user.name "GitHub Actions"
+          git config --local user.email "github-actions@github.com"
+          TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
+          COMMIT_MSG="sync：$TIMESTAMP"
+          git commit -m "$COMMIT_MSG"
+          git push "https://$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" HEAD:"$TARGET_BRANCH"
+        else
+          echo "没有需要提交的更改。"
+        fi
