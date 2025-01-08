@@ -117,12 +117,12 @@ jobs:
         )
 
         for repo in "${repos[@]}"; do
-          # 通过字符串处理方式解析每个仓库配置信息，获取对应的值（修正sed命令语法格式）
-          package_name=$(echo "$repo" | sed -n 's/^[[:space:]]*-[[:space:]]*package_name:[[:space:]]*\(.*\)[[:space:]]*$/\1/p')
-          source_repo=$(echo "$repo" | sed -n 's/^[[:space:]]*-[[:space:]]*source_repo:[[:space:]]*\(.*\)[[:space:]]*$/\1/p')
-          source_branch=$(echo "$repo" | sed -n 's/^[[:space:]]*-[[:space:]]*source_branch:[[:space:]]*\(.*\)[[:space:]]*$/\1/p')
-          source_path=$(echo "$repo" | sed -n 's/^[[:space:]]*-[[:space:]]*source_path:[[:space:]]*\(.*\)[[:space:]]*$/\1/p')
-          target_path=$(echo "$repo" | sed -n 's/^[[:space:]]*-[[:space:]]*target_path:[[:space:]]*\(.*\)[[:space:]]*$/\1/p')
+          # 使用yq工具解析每个仓库配置信息，获取对应的值
+          package_name=$(echo "$repo" | yq '.package_name')
+          source_repo=$(echo "$repo" | yq '.source_repo')
+          source_branch=$(echo "$repo" | yq '.source_branch')
+          source_path=$(echo "$repo" | yq '.source_path')
+          target_path=$(echo "$repo" | yq '.target_path')
 
           # 若source_path没值（不写），则代表同步整个源仓库
           if [ -z "$source_path" ]; then
