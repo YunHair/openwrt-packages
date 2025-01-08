@@ -23,6 +23,11 @@ jobs:
         path: base-repo
         ref: ${{ env.TARGET_BRANCH }}
 
+    - name: 安装 yq
+      run: |
+        curl -sL https://github.com/mikefarah/yq/releases/download/v4.19.2/yq_linux_amd64 -o /usr/local/bin/yq
+        chmod +x /usr/local/bin/yq
+
     - name: 准备目标目录并初始化Git仓库（如果需要）
       run: |
         set -e
@@ -48,37 +53,65 @@ jobs:
         set -x
 
         TARGET_DIR="$TARGET_REPO_PATH"
-
-        # 定义表示整个源仓库的标识常量（可根据实际需求自定义命名，这里使用ENTIRE_SOURCE_REPO）
         ENTIRE_SOURCE_REPO="ALL"
-        
-        repos=(
-          { package_name: luci-app-wolplus, s_repo: kiddin9/kwrt-packages, s_branch: main, s_path: luci-app-wolplus }
-          { package_name: luci-app-openai, s_repo: kiddin9/kwrt-packages, s_branch: main, s_path: luci-app-openai }
-          { package_name: openai, s_repo: kiddin9/kwrt-packages, s_branch: main, s_path: openai }
-          { package_name: luci-app-chatgpt, s_repo: kiddin9/kwrt-packages, s_branch: main, s_path: luci-app-chatgpt-web }
-          { package_name: luci-app-timewol, s_repo: VIKINGYFY/packages, s_branch: main, s_path: luci-app-timewol }
-          { package_name: luci-app-advancedplus, s_repo: YunHair/luci-app-advancedplus, s_branch: main }
-          { package_name: luci-app-onliner, s_repo: YunHair/luci-app-onliner, s_branch: main }
-          { package_name: luci-app-multifrpc, s_repo: YunHair/luci-app-multifrpc, s_branch: main }
-          { package_name: luci-app-easymesh, s_repo: theosoft-git/luci-app-easymesh, s_branch: master }
-          { package_name: luci-app-tailscale, s_repo: asvow/luci-app-tailscale, s_branch: main }
-          { package_name: homeproxy, s_repo: VIKINGYFY/homeproxy, s_branch: main }
-          { package_name: luci-app-pushbot, s_repo: zzsj0928/luci-app-pushbot, s_branch: master }
-        )
 
-        for repo in "${repos[@]}"; do
-          package_name=$(echo "$repo" | jq -r '.package_name')
-          s_repo=$(echo "$repo" | jq -r '.s_repo')
-          s_branch=$(echo "$repo" | jq -r '.s_branch')
-          s_path=$(echo "$repo" | jq -r '.s_path')
-          t_path=$(echo "$repo" | jq -r '.t_path')
+        repos_file="${GITHUB_WORKSPACE}/repos.yml"
 
-          # 若s_path没值（不写），则代表同步整个源仓库
-          s_path=${s_path:-$ENTIRE_SOURCE_REPO}
+        # 创建repos.yml文件
+        echo "
+        repos:
+          - package_name: luci-app-wolplus
+            s_repo: kiddin9/kwrt-packages
+            s_branch: main
+            s_path: luci-app-wolplus
+          - package_name: luci-app-openai
+            s_repo: kiddin9/kwrt-packages
+            s_branch: main
+            s_path: luci-app-openai
+          - package_name: openai
+            s_repo: kiddin9/kwrt-packages
+            s_branch: main
+            s_path: openai
+          - package_name: luci-app-chatgpt
+            s_repo: kiddin9/kwrt-packages
+            s_branch: main
+            s_path: luci-app-chatgpt-web
+          - package_name: luci-app-timewol
+            s_repo: VIKINGYFY/packages
+            s_branch: main
+            s_path: luci-app-timewol
+          - package_name: luci-app-advancedplus
+            s_repo: YunHair/luci-app-advancedplus
+            s_branch: main
+          - package_name: luci-app-onliner
+            s_repo: YunHair/luci-app-onliner
+            s_branch: main
+          - package_name: luci-app-multifrpc
+            s_repo: YunHair/luci-app-multifrpc
+            s_branch: main
+          - package_name: luci-app-easymesh
+            s_repo: theosoft-git/luci-app-easymesh
+            s_branch: master
+          - package_name: luci-app-tailscale
+            s_repo: asvow/luci-app-tailscale
+            s_branch: main
+          - package_name: homeproxy
+            s_repo: VIKINGYFY/homeproxy
+            s_branch: main
+          - package_name: luci-app-pushbot
+            s_repo: zzsj0928/luci-app-pushbot
+            s_branch: master
+        " > "$repos_file"
 
-          # 若t_path没值（不写），则代表和package_name相同
-          t_path=${t_path:-$package_name}
+        # 解析 YAML 文件并遍历每个仓库
+        repos_count=$(yq e '.repos | length' "$repos_file")
+
+        for i in $(seq 0 $((repos_count - 1))); do
+          package_name=$(yq e ".repos[$i].package_name" "$repos_file")
+          s_repo=$(yq e ".repos[$i].s_repo" "$repos_file")
+          s_branch=$(yq e ".repos[$i].s_branch" "$repos_file")
+          s_path=$(yq e ".repos[$i].s_path // \"ALL\"" "$repos_file")  # 默认值：ALL
+          t_path=$(yq e ".repos[$i].t_path // \"$package_name\"" "$repos_file")  # 默认值：package_name
 
           TEMP_CLONE_DIR="$TARGET_DIR/temp-clone-$RANDOM-$package_name"
           TARGET_PATH="$TARGET_DIR/$t_path"
