@@ -23,7 +23,10 @@ jobs:
         path: base-repo
         ref: ${{ env.TARGET_BRANCH }}
 
-
+    - name: 安装 yq
+      run: |
+        curl -sL https://github.com/mikefarah/yq/releases/download/v4.19.2/yq_linux_amd64 -o /usr/local/bin/yq
+        chmod +x /usr/local/bin/yq
 
     - name: 准备目标目录并初始化Git仓库（如果需要）
       run: |
@@ -50,54 +53,52 @@ jobs:
         set -x
 
         TARGET_DIR="$TARGET_REPO_PATH"
-        ENTIRE_SOURCE_REPO="ALL"
-
         repos_file="${GITHUB_WORKSPACE}/repos.yml"
 
-        # 创建repos.yml文件
+        # 创建 repos.yml 文件
         echo "
         repos:
           - package_name: luci-app-wolplus
-            s_repo: kiddin9/kwrt-packages
-            s_branch: main
-            s_path: luci-app-wolplus
+            source_repo: kiddin9/kwrt-packages
+            source_branch: main
+            source_path: luci-app-wolplus
           - package_name: luci-app-openai
-            s_repo: kiddin9/kwrt-packages
-            s_branch: main
-            s_path: luci-app-openai
+            source_repo: kiddin9/kwrt-packages
+            source_branch: main
+            source_path: luci-app-openai
           - package_name: openai
-            s_repo: kiddin9/kwrt-packages
-            s_branch: main
-            s_path: openai
+            source_repo: kiddin9/kwrt-packages
+            source_branch: main
+            source_path: openai
           - package_name: luci-app-chatgpt
-            s_repo: kiddin9/kwrt-packages
-            s_branch: main
-            s_path: luci-app-chatgpt-web
+            source_repo: kiddin9/kwrt-packages
+            source_branch: main
+            source_path: luci-app-chatgpt-web
           - package_name: luci-app-timewol
-            s_repo: VIKINGYFY/packages
-            s_branch: main
-            s_path: luci-app-timewol
+            source_repo: VIKINGYFY/packages
+            source_branch: main
+            source_path: luci-app-timewol
           - package_name: luci-app-advancedplus
-            s_repo: YunHair/luci-app-advancedplus
-            s_branch: main
+            source_repo: YunHair/luci-app-advancedplus
+            source_branch: main
           - package_name: luci-app-onliner
-            s_repo: YunHair/luci-app-onliner
-            s_branch: main
+            source_repo: YunHair/luci-app-onliner
+            source_branch: main
           - package_name: luci-app-multifrpc
-            s_repo: YunHair/luci-app-multifrpc
-            s_branch: main
+            source_repo: YunHair/luci-app-multifrpc
+            source_branch: main
           - package_name: luci-app-easymesh
-            s_repo: theosoft-git/luci-app-easymesh
-            s_branch: master
+            source_repo: theosoft-git/luci-app-easymesh
+            source_branch: master
           - package_name: luci-app-tailscale
-            s_repo: asvow/luci-app-tailscale
-            s_branch: main
+            source_repo: asvow/luci-app-tailscale
+            source_branch: main
           - package_name: homeproxy
-            s_repo: VIKINGYFY/homeproxy
-            s_branch: main
+            source_repo: VIKINGYFY/homeproxy
+            source_branch: main
           - package_name: luci-app-pushbot
-            s_repo: zzsj0928/luci-app-pushbot
-            s_branch: master
+            source_repo: zzsj0928/luci-app-pushbot
+            source_branch: master
         " > "$repos_file"
 
         # 解析 YAML 文件并遍历每个仓库
@@ -105,34 +106,35 @@ jobs:
 
         for i in $(seq 0 $((repos_count - 1))); do
           package_name=$(yq e ".repos[$i].package_name" "$repos_file")
-          s_repo=$(yq e ".repos[$i].s_repo" "$repos_file")
-          s_branch=$(yq e ".repos[$i].s_branch" "$repos_file")
-          s_path=$(yq e ".repos[$i].s_path // \"ALL\"" "$repos_file")  # 默认值：ALL
-          t_path=$(yq e ".repos[$i].t_path // \"$package_name\"" "$repos_file")  # 默认值：package_name
+          source_repo=$(yq e ".repos[$i].source_repo" "$repos_file")
+          source_branch=$(yq e ".repos[$i].source_branch" "$repos_file")
+          source_path=$(yq e ".repos[$i].source_path // \"\"" "$repos_file")  # 默认为空字符串
+          target_path=$(yq e ".repos[$i].target_path // \"$package_name\"" "$repos_file")  # 默认为 package_name
 
           TEMP_CLONE_DIR="$TARGET_DIR/temp-clone-$RANDOM-$package_name"
-          TARGET_PATH="$TARGET_DIR/$t_path"
+          TARGET_PATH="$TARGET_DIR/$target_path"
 
           echo "开始同步 $package_name"
 
           # 克隆源仓库并同步文件
-          if git ls-remote "https://$GITHUB_TOKEN@github.com/$s_repo.git" &> /dev/null; then
-            git clone --depth 1 --branch "$s_branch" "https://$GITHUB_TOKEN@github.com/$s_repo.git" "$TEMP_CLONE_DIR"
+          if git ls-remote "https://$GITHUB_TOKEN@github.com/$source_repo.git" &> /dev/null; then
+            git clone --depth 1 --branch "$source_branch" "https://$GITHUB_TOKEN@github.com/$source_repo.git" "$TEMP_CLONE_DIR"
           else
-            echo "源仓库 $s_repo 不存在，跳过此仓库同步"
+            echo "源仓库 $source_repo 不存在，跳过此仓库同步"
             continue
           fi
 
-          # 检查源路径是否存在
-          if [ -d "$TEMP_CLONE_DIR/$s_path" ]; then
-            mkdir -p "$TARGET_PATH"
-            if [ "$s_path" = "$ENTIRE_SOURCE_REPO" ]; then
-              rsync -av --exclude '.git' "$TEMP_CLONE_DIR/" "$TARGET_PATH/"
-            else
-              rsync -av --delete "$TEMP_CLONE_DIR/$s_path/" "$TARGET_PATH/"
-            fi
+          # 如果 source_path 为空，则同步整个仓库
+          if [ -z "$source_path" ]; then
+            rsync -av --exclude '.git' "$TEMP_CLONE_DIR/" "$TARGET_PATH/"
           else
-            echo "源目录 $s_path 不存在，跳过此目录同步"
+            # 检查源路径是否存在
+            if [ -d "$TEMP_CLONE_DIR/$source_path" ]; then
+              mkdir -p "$TARGET_PATH"
+              rsync -av --delete "$TEMP_CLONE_DIR/$source_path/" "$TARGET_PATH/"
+            else
+              echo "源目录 $source_path 不存在，跳过此目录同步"
+            fi
           fi
 
           rm -rf "$TEMP_CLONE_DIR"
