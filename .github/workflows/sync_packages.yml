@@ -60,15 +60,6 @@ jobs:
             source_branch: main
             source_path: luci-app-wolplus
             target_path: luci-app-wolplus
-          - package_name: luci-app-openai
-            source_repo: kiddin9/kwrt-packages
-            source_branch: main
-            source_path: luci-app-openai
-            target_path: ""
-          - package_name: openai
-            source_repo: kiddin9/kwrt-packages
-            source_branch: main
-            source_path: openai
           - package_name: luci-app-chatgpt
             source_repo: kiddin9/kwrt-packages
             source_branch: main
@@ -94,9 +85,9 @@ jobs:
           - package_name: luci-app-tailscale
             source_repo: asvow/luci-app-tailscale
             source_branch: main
-          - package_name: homeproxy
-            source_repo: VIKINGYFY/homeproxy
-            source_branch: main
+          - package_name: luci-app-homeproxy
+            source_repo: muink/luci-app-homeproxy
+            source_branch: master
           - package_name: luci-app-pushbot
             source_repo: zzsj0928/luci-app-pushbot
             source_branch: master
