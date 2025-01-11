@@ -56,10 +56,10 @@ jobs:
         echo "
         repos:
           - package_name: luci-app-wolplus
-            source_repo: kiddin9/kwrt-packages
+            source_repo: YunHair/luci-app-wolplus
             source_branch: main
-            source_path: luci-app-wolplus
-            target_path: luci-app-wolplus
+            source_path: ""
+            target_path: ""
           - package_name: luci-app-chatgpt
             source_repo: kiddin9/kwrt-packages
             source_branch: main
