@@ -91,6 +91,10 @@ jobs:
           - package_name: luci-app-pushbot
             source_repo: zzsj0928/luci-app-pushbot
             source_branch: master
+          - package_name: luci-app-wechatpush
+            source_repo: tty228/luci-app-wechatpush
+            source_branch: master
+            
         " > "$repos_file"
 
         # 解析 YAML 文件并遍历每个仓库
