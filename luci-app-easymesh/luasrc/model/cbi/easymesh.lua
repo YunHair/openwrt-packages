@@ -8,7 +8,7 @@ m = Map("easymesh")
 
 function detect_Node()
 	local data = {}
-	local lps = luci.util.execi(" batctl n 2>/dev/null | tail +2 | sed 's/^[ ][ ]*//g' | sed 's/[ ][ ]*/ /g' | sed 's/$/ /g' ")
+	local lps = luci.util.execi(" batctl n 2>/dev/null | tail +3 | sed 's/^[ ][ ]*//g' | sed 's/[ ][ ]*/ /g' | sed 's/$/ /g' ")
 	for value in lps do
 		local row = {}
 		local pos = string.find(value, " ")
@@ -30,6 +30,7 @@ function detect_Node()
 	end
 	return data
 end
+
 local Nodes = luci.sys.exec("batctl n 2>/dev/null| tail +3 | wc -l")
 local Node = detect_Node()
 v = m:section(Table, Node, "" ,"<b>" .. translate("Active node") .. "：" .. Nodes .. "</b>")
