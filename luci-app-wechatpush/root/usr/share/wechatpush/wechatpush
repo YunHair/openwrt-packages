@@ -366,24 +366,24 @@ time_for_humans() {
 	[ -z "$1" ] && return
 
 	if [ "$1" -lt 60 ]; then
-		echo "${1} 秒"
+		echo "${1} s"
 	elif [ "$1" -lt 3600 ]; then
 		local usetime_min=$(expr $1 / 60)
 		local usetime_sec=$(expr $usetime_min \* 60)
 		local usetime_sec=$(expr $1 - $usetime_sec)
-		echo "${usetime_min} 分 ${usetime_sec} 秒"
+		echo "${usetime_min} h${usetime_sec} s"
 	elif [ "$1" -lt 86400 ]; then
 		local usetime_hour=$(expr $1 / 3600)
 		local usetime_min=$(expr $usetime_hour \* 3600)
 		local usetime_min=$(expr $1 - $usetime_min)
 		local usetime_min=$(expr $usetime_min / 60)
-		echo "${usetime_hour} 小时 ${usetime_min} 分"
+		echo "${usetime_hour}h${usetime_min}m"
 	else
 		local usetime_day=$(expr $1 / 86400)
 		local usetime_hour=$(expr $usetime_day \* 86400)
 		local usetime_hour=$(expr $1 - $usetime_hour)
 		local usetime_hour=$(expr $usetime_hour / 3600)
-		echo "${usetime_day} 天 ${usetime_hour} 小时"
+		echo "${usetime_day} d${usetime_hour} h"
 	fi
 }
 
@@ -1489,7 +1489,7 @@ current_device() {
 	[ -f "${dir}/usage.db" ] && local ip_total_db="总计流量${str_space}${str_space}${str_space}${str_space}${str_space}${str_space}${str_space}${str_space}"
 	local explain="${str_splitline}${str_title_start} 现有在线设备 ${logrow} 台，具体如下${str_title_end}"
 	[ $logrow -eq "0" ] && local explain="${send_content}${str_splitline}${str_title_start} 当前无在线设备${str_title_end}"
-	local header="${str_linefeed}${str_tab}IP 地址${str_space}${str_space}${str_space}${str_space}${str_space}${str_space}${str_space}${str_space}${str_space}${ip_total_db}${str_space}${str_space}${str_space}${str_space}在线时间${str_space}${str_space}${str_space}${str_space}${str_space}${str_space}${str_space}${str_space}${str_space}${str_space}${str_space}${str_space}客户端名"
+	local header="${str_linefeed}${str_tab}客户端名${str_space}${str_space} | ${str_space}IP 地址${str_space}${str_space}${str_space}${str_space}${ip_total_db}${str_space}${str_space} | 在线时间"
 
 	content="${explain}${header}"
 
@@ -1528,7 +1528,8 @@ current_device() {
 			unset i n
 			total="${total}${str_space}|${str_space}"
 		fi
-		content="${content}${str_linefeed}${str_space}${ip}${str_space}|${str_space}${total}${time_online}${str_space}|${str_space}${name}"
+		#content="${content}${str_linefeed}${str_space}${ip}${str_space}|${str_space}${total}${time_online}${str_space}|${str_space}${name}"
+		content="${content}${str_linefeed}${str_space}${str_space}${name} | ${str_space}${ip}${str_space} | ${str_space}${total}${time_online} "
 	done
 	[ -f "${dir}/send_pid" ] && echo "$content" >"$output_dir/current_device" && unset content
 }
