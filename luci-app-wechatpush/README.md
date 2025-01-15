@@ -1,3 +1,5 @@
+## 更改自用，因 markdown 版推送到微信时不能直接查看，故把 markdown 版改为 文字卡片 版。
+
 ## 简介
 
 [![Lastest Release](https://img.shields.io/github/release/tty228/luci-app-wechatpush.svg?style=flat)](https://github.com/tty228/luci-app-wechatpush/releases)
