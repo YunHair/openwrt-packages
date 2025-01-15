@@ -65,7 +65,7 @@ jobs:
         - {package_name: luci-app-tailscale, source_repo: asvow/luci-app-tailscale, source_branch: main }
         - {package_name: luci-app-homeproxy, source_repo: muink/luci-app-homeproxy, source_branch: master }
         #- {package_name: luci-app-pushbot, source_repo: zzsj0928/luci-app-pushbot, source_branch: master }
-        - {package_name: luci-app-wechatpush, source_repo: tty228/luci-app-wechatpush, source_branch: master }
+        #- {package_name: luci-app-wechatpush, source_repo: tty228/luci-app-wechatpush, source_branch: master }
             
         " > "$repos_file"
 
