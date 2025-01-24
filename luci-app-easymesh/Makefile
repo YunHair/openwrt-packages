@@ -6,7 +6,7 @@ include $(TOPDIR)/rules.mk
 
 LUCI_TITLE := LuCI Support for easymesh
 LUCI_DEPENDS := +kmod-cfg80211 +batctl-default +kmod-batman-adv +wpad-mesh-openssl +dawn +luci-proto-batman-adv
-PKG_VERSION := 2.0.25011101
+PKG_VERSION := 2.0.25012401
 
 include $(TOPDIR)/feeds/luci/luci.mk
 

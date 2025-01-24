@@ -132,12 +132,20 @@ add_kvr() {
 
 add_dawn() {
 	kvr=$(uci -q get easymesh.config.kvr)
+	r_2g=$(uci -q get easymesh.config.r_2g)
 	rssi_val=$(uci -q get easymesh.config.rssi_val)
 	low_rssi_val=$(uci -q get easymesh.config.low_rssi_val)
 
 	if [ "$kvr" = 1 ]; then
-		uci set dawn.@metric[0].rssi_val=$rssi_val
-		uci set dawn.@metric[0].low_rssi_val=$low_rssi_val
+		uci set dawn.802_11g.rssi_val=$rssi_val
+		uci set dawn.802_11g.low_rssi_val=$low_rssi_val
+		if [ "$r_2g" = 1 ]; then
+			uci set dawn.802_11a.rssi_val=$rssi_val
+			uci set dawn.802_11a.low_rssi_val=$low_rssi_val
+		else
+			uci set dawn.802_11a.rssi_val='-60'
+			uci set dawn.802_11a.low_rssi_val='-80'
+		fi
 		uci commit dawn
 		/etc/init.d/dawn enable && /etc/init.d/dawn start
 	else
