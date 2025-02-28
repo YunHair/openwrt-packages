@@ -1,7 +1,13 @@
-module("luci.controller.timewol", package.seeall)
+local fs = require "nixio.fs"
+local sys = require "luci.sys"
+local http = require "luci.http"
 
-function index()
-	if not nixio.fs.access("/etc/config/timewol") then return end
+local M = {}
+
+function M.index()
+	if not fs.access("/etc/config/timewol") then
+		return
+	end
 
 	entry({"admin", "control"}, firstchild(), "Control", 44).dependent = false
 	local page = entry({"admin", "control", "timewol"}, cbi("timewol"), _("Timed WOL"))
@@ -11,9 +17,12 @@ function index()
 	entry({"admin", "control", "timewol", "status"}, call("status")).leaf = true
 end
 
-function status()
-	local e = {}
-	e.status = luci.sys.call("cat /etc/crontabs/root |grep etherwake >/dev/null") == 0
-	luci.http.prepare_content("application/json")
-	luci.http.write_json(e)
+function M.status()
+	local e = {
+		status = sys.call("cat /etc/crontabs/root |grep etherwake >/dev/null") == 0
+	}
+	http.prepare_content("application/json")
+	http.write_json(e)
 end
+
+return M

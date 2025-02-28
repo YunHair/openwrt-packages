@@ -29,9 +29,7 @@ is_true() {
 
 # 加载配置，判断是否启用
 load_config() {
-	local enabled
-	enabled=$(uci_get_by_type basic enable "0")
-	is_true "$enabled"
+	is_true "$(uci_get_by_type basic enable "0")"
 }
 
 # 清理 crontab 中的 etherwake 规则
@@ -42,7 +40,6 @@ clear_crontab() {
 # 添加 WoL 规则到 crontab
 add_rule() {
 	clear_crontab
-
 	for i in $(seq 0 100); do
 		local macaddr maceth minute hour day month weeks
 

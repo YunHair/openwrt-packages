@@ -2,6 +2,8 @@
 START=99
 STOP=70
 
+USE_PROCD=1
+
 load_easymesh_config() {
 	enable=$(uci -q get easymesh.config.enabled)
 	mesh_bat0=$(uci -q get network.bat0)
@@ -262,17 +264,14 @@ set_easymesh() {
 			ap_mode_stop
 		fi
 	fi
-	/etc/init.d/network restart
+	/etc/init.d/network reload
 }
 
-start() {
-	return 0
-}
-
-stop() {
-	return 0
-}
-
-restart() {
+start_service() {
 	set_easymesh
 }
+
+service_triggers() {
+	procd_add_reload_trigger "easymesh"
+}
+

@@ -1,31 +1,31 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
-#: luci-app-timewol/luasrc/model/cbi/timewol.lua:16
+#: luci-app-timewol/luasrc/model/cbi/timewol.lua:15
 msgid "Basic Settings"
 msgstr ""
 
-#: luci-app-timewol/luasrc/model/cbi/timewol.lua:29
+#: luci-app-timewol/luasrc/model/cbi/timewol.lua:27
 msgid "Client MAC"
 msgstr ""
 
-#: luci-app-timewol/luasrc/model/cbi/timewol.lua:23
+#: luci-app-timewol/luasrc/model/cbi/timewol.lua:21
 msgid "Client Settings"
 msgstr ""
 
-#: luci-app-timewol/luasrc/model/cbi/timewol.lua:13
+#: luci-app-timewol/luasrc/model/cbi/timewol.lua:12
 msgid "Collecting data..."
 msgstr ""
 
-#: luci-app-timewol/luasrc/model/cbi/timewol.lua:11
+#: luci-app-timewol/luasrc/model/cbi/timewol.lua:10
 msgid "Current Status"
 msgstr ""
 
-#: luci-app-timewol/luasrc/model/cbi/timewol.lua:64
+#: luci-app-timewol/luasrc/model/cbi/timewol.lua:62
 msgid "Day"
 msgstr ""
 
-#: luci-app-timewol/luasrc/model/cbi/timewol.lua:19
+#: luci-app-timewol/luasrc/model/cbi/timewol.lua:17
 msgid "Enable"
 msgstr ""
 
@@ -33,31 +33,31 @@ msgstr ""
 msgid "Grant UCI access for luci-app-timewol"
 msgstr ""
 
-#: luci-app-timewol/luasrc/model/cbi/timewol.lua:63
+#: luci-app-timewol/luasrc/model/cbi/timewol.lua:61
 msgid "Hour"
 msgstr ""
 
-#: luci-app-timewol/luasrc/model/cbi/timewol.lua:56
+#: luci-app-timewol/luasrc/model/cbi/timewol.lua:54
 msgid "Invalid value for %s: %s. Must be between %d and %d or '*'"
 msgstr ""
 
-#: luci-app-timewol/luasrc/model/cbi/timewol.lua:62
+#: luci-app-timewol/luasrc/model/cbi/timewol.lua:60
 msgid "Minute"
 msgstr ""
 
-#: luci-app-timewol/luasrc/model/cbi/timewol.lua:65
+#: luci-app-timewol/luasrc/model/cbi/timewol.lua:63
 msgid "Month"
 msgstr ""
 
-#: luci-app-timewol/luasrc/view/timewol/index.htm:14
+#: luci-app-timewol/luasrc/view/timewol/index.htm:13
 msgid "NOT RUNNING"
 msgstr ""
 
-#: luci-app-timewol/luasrc/model/cbi/timewol.lua:36
+#: luci-app-timewol/luasrc/model/cbi/timewol.lua:34
 msgid "Network Interface"
 msgstr ""
 
-#: luci-app-timewol/luasrc/view/timewol/index.htm:14
+#: luci-app-timewol/luasrc/view/timewol/index.htm:13
 msgid "RUNNING"
 msgstr ""
 
@@ -65,7 +65,7 @@ msgstr ""
 msgid "Running Status"
 msgstr ""
 
-#: luci-app-timewol/luasrc/controller/timewol.lua:7
+#: luci-app-timewol/luasrc/controller/timewol.lua:13
 msgid "Timed WOL"
 msgstr ""
 
@@ -77,6 +77,6 @@ msgstr ""
 msgid "Wake up your local area network devices on schedule"
 msgstr ""
 
-#: luci-app-timewol/luasrc/model/cbi/timewol.lua:66
+#: luci-app-timewol/luasrc/model/cbi/timewol.lua:64
 msgid "Week"
 msgstr ""

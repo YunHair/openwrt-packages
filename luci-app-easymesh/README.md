@@ -14,7 +14,7 @@ Forck 自 https://github.com/ntlf9t/luci-app-easymesh 的有线+无线回程的m
 * 增加了对luci-proto-batman-adv的依赖
 * 修复了漫游rssi设置无效的问题
 
-目前此插件已在 https://github.com/coolsnowwolf/lede lean版openwrt 和 https://github.com/immortalwrt/immortalwrt immortalwrt 的23.05分支上测试通过。
+目前此插件已在 https://github.com/coolsnowwolf/lede lean版openwrt 和 https://github.com/immortalwrt/immortalwrt immortalwrt 的23.05、24.10分支上测试通过。
 
 如需单独编译本项目，可以在OpenWRT源码根目录执行：
 

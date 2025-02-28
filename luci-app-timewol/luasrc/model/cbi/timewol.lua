@@ -7,7 +7,6 @@ map.template = "timewol/index"
 -- Running Status Section
 local status_section = map:section(TypedSection, "basic", translate("Running Status"))
 status_section.anonymous = true
-
 local status = status_section:option(DummyValue, "timewol_status", translate("Current Status"))
 status.template = "timewol/timewol"
 status.value = translate("Collecting data...")
@@ -15,7 +14,6 @@ status.value = translate("Collecting data...")
 -- Basic Settings Section
 local basic_section = map:section(TypedSection, "basic", translate("Basic Settings"))
 basic_section.anonymous = true
-
 local enable = basic_section:option(Flag, "enable", translate("Enable"))
 enable.rmempty = false
 
@@ -68,7 +66,7 @@ local schedule_options = {
 
 for _, opt in ipairs(schedule_options) do
 	local field = client_section:option(Value, opt[1], opt[2])
-	field.default = opt[5] or opt[4] -- Use default value if present, otherwise use maximum value
+	field.default = opt[5] or opt[4]
 	field.optional = false
 	field.validate = function(self, value)
 		return validate_cron_field(opt[2], value, opt[3], opt[4], field.default)
