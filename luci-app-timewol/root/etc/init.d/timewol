@@ -58,7 +58,7 @@ add_rule() {
 		weeks=$(uci_get_by_type macclient weeks "*" "$i")
 
 		# 添加规则
-		echo "$minute $hour $day $month $weeks $ETHERWAKE_CMD -D -i $maceth $macaddr" >> "$CRONTAB_FILE"
+		echo "$minute $hour $day $month $weeks $ETHERWAKE_CMD -b -D -i $maceth $macaddr" >> "$CRONTAB_FILE"
 	done
 }
 

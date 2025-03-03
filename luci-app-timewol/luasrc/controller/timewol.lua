@@ -19,7 +19,7 @@ end
 
 function M.status()
 	local e = {
-		status = sys.call("cat /etc/crontabs/root |grep etherwake >/dev/null") == 0
+		status = sys.call("cat /etc/crontabs/root | grep etherwake >/dev/null") == 0
 	}
 	http.prepare_content("application/json")
 	http.write_json(e)
