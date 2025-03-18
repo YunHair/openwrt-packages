@@ -67,6 +67,7 @@ jobs:
         - {package_name: luci-app-multifrpc, source_repo: YunHair/luci-app-multifrpc, source_branch: main }
         
         - {package_name: luci-app-easymesh, source_repo: theosoft-git/luci-app-easymesh, source_branch: master }
+        - {package_name: luci-app-easytier, source_repo: EasyTier/luci-app-easytier, source_branch: main }
         - {package_name: luci-app-tailscale, source_repo: asvow/luci-app-tailscale, source_branch: main }
         - {package_name: luci-app-homeproxy, source_repo: muink/luci-app-homeproxy, source_branch: master }
         #- {package_name: luci-app-nginx-manager, source_repo: kiddin9/kwrt-packages, source_branch: master }
