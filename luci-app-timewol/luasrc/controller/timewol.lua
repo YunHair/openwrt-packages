@@ -1,28 +1,46 @@
-local fs = require "nixio.fs"
-local sys = require "luci.sys"
-local http = require "luci.http"
+module("luci.controller.timewol", package.seeall)
 
-local M = {}
+local x = luci.model.uci.cursor()
 
-function M.index()
-	if not fs.access("/etc/config/timewol") then
-		return
-	end
+function index()
+    if not nixio.fs.access("/etc/config/timewol") then return end
 
-	entry({"admin", "control"}, firstchild(), "Control", 44).dependent = false
-	local page = entry({"admin", "control", "timewol"}, cbi("timewol"), _("Timed WOL"))
+    entry({"admin", "control"}, firstchild(), "Control", 44).dependent = false
+    local page = entry({"admin", "control", "timewol"}, cbi("timewol"), _("Timed WOL"))
 	page.order = 95
 	page.dependent = true
 	page.acl_depends = { "luci-app-timewol" }
-	entry({"admin", "control", "timewol", "status"}, call("status")).leaf = true
+    entry({"admin", "control", "timewol", "status"}, call("status")).leaf = true
+    entry( {"admin", "control", "timewol", "awake"}, call("awake") ).leaf = true
 end
 
-function M.status()
-	local e = {
-		status = sys.call("cat /etc/crontabs/root | grep etherwake >/dev/null") == 0
-	}
-	http.prepare_content("application/json")
-	http.write_json(e)
+function status()
+    local e = {}
+    e.status = luci.sys.call("cat /etc/crontabs/root |grep etherwake >/dev/null") == 0
+    luci.http.prepare_content("application/json")
+    luci.http.write_json(e)
 end
 
-return M
+function awake(sections)
+	lan = x:get("timewol",sections,"maceth")
+	mac = x:get("timewol",sections,"macaddr")
+    local e = {}
+    cmd = "/usr/bin/etherwake -D -i " .. lan .. " -b " .. mac .. " 2>&1"
+	local p = io.popen(cmd)
+	local msg = ""
+	if p then
+		while true do
+			local l = p:read("*l")
+			if l then
+				if #l > 100 then l = l:sub(1, 100) .. "..." end
+				msg = msg .. l
+			else
+				break
+			end
+		end
+		p:close()
+	end
+	e["data"] = msg
+    luci.http.prepare_content("application/json")
+    luci.http.write_json(e)
+end
