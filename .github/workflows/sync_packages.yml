@@ -57,14 +57,19 @@ jobs:
         repos:
         - {package_name: luci-app-wolplus, source_repo: YunHair/luci-app-wolplus, source_branch: main, source_path: "", target_path: "" }
         - {package_name: luci-app-chatgpt, source_repo: kiddin9/kwrt-packages, source_branch: main, source_path: luci-app-chatgpt-web }
-        - {package_name: luci-app-timewol, source_repo: VIKINGYFY/packages, source_branch: main, source_path: luci-app-timewol }
+        - {package_name: luci-app-nginx-manager, source_repo: kiddin9/kwrt-packages, source_branch: main, source_path: luci-app-nginx-manager }
+        - {package_name: luci-app-supervisord, source_repo: kiddin9/kwrt-packages, source_branch: main, source_path: luci-app-supervisord }
+        - {package_name: luci-app-accesscontrol-plus, source_repo: kiddin9/kwrt-packages, source_branch: main, source_path: luci-app-accesscontrol-plus }
+        - {package_name: luci-app-timewol, source_repo: kiddin9/kwrt-packages, source_branch: main, source_path: luci-app-timewol }
+        
         - {package_name: luci-app-advancedplus, source_repo: YunHair/luci-app-advancedplus, source_branch: main }
         - {package_name: luci-app-onliner, source_repo: YunHair/luci-app-onliner, source_branch: main }
         - {package_name: luci-app-multifrpc, source_repo: YunHair/luci-app-multifrpc, source_branch: main }
+        
         - {package_name: luci-app-easymesh, source_repo: theosoft-git/luci-app-easymesh, source_branch: master }
         - {package_name: luci-app-tailscale, source_repo: asvow/luci-app-tailscale, source_branch: main }
         - {package_name: luci-app-homeproxy, source_repo: muink/luci-app-homeproxy, source_branch: master }
-        #- {package_name: luci-app-pushbot, source_repo: zzsj0928/luci-app-pushbot, source_branch: master }
+        #- {package_name: luci-app-nginx-manager, source_repo: kiddin9/kwrt-packages, source_branch: master }
         #- {package_name: luci-app-wechatpush, source_repo: tty228/luci-app-wechatpush, source_branch: master }
             
         " > "$repos_file"
