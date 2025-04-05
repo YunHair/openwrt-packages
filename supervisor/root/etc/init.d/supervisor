@@ -23,6 +23,7 @@ start_service() {
     local address=$(get_config $NAME http address "127.0.0.1:9001")
     local username=$(get_config $NAME http username "admin")
     local password=$(get_config $NAME http password "admin")
+    local confdcustom=$(get_config $NAME include confdcustom "/root/supervisor")
 
     cat <<EOF > $CONF
 [unix_http_server]
@@ -53,8 +54,10 @@ serverurl=unix://$SOCKFILE
 
 [include]
 files = $CONFD/*.conf
+files = $confdcustom/*.conf
 EOF
     mkdir -p $CONFD
+	mkdir -p $confdcustom
     procd_open_instance $NAME_instance
     procd_set_param command $PROG -c $CONF
     procd_set_param respawn
