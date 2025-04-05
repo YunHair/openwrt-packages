@@ -53,6 +53,7 @@ CreateTab(s, "parentcontrol", "/etc/config/parentcontrol")
 CreateTab(s, "smartdns", "/etc/config/smartdns")
 CreateTab(s, "socat", "/etc/config/socat")
 CreateTab(s, "wolplus", "/etc/config/wolplus")
+CreateTab(s, "supervisor", "/etc/config/supervisor")
 
 CreateTab(s, "ddns-go", "/etc/ddns-go/ddns-go-config.yaml")
 
