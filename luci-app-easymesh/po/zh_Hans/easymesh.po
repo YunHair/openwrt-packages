@@ -1,0 +1,157 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: luci-app-easymesh\n"
+"POT-Creation-Date: 2023-11-15 12:00+0800\n"
+"PO-Revision-Date: 2023-11-15 12:00+0800\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: zh_Hans\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 3.0.1\n"
+
+msgid "Easy Mesh WiFi Setup"
+msgstr "EasyMesh WiFi 设置"
+
+msgid "Powered by Batman-adv (Better Approach To Mobile Adhoc Networking - Advanced). First setup your Mesh Gateway Server then setup the nodes. When configuring a Mesh Node, first activate your mesh WiFi on the radio device and establish a connection. Then enable it as a DHCP node. The default settings are typically adequate for most Mesh WiFi configurations."
+msgstr "基于 Batman-adv（高级移动自组网方案）。首先配置 Mesh 网关服务器，然后配置节点。配置节点时，请先在无线设备上激活 Mesh WiFi 并建立连接，再启用为 DHCP 节点。默认设置适用于大多数 Mesh WiFi 场景。"
+
+msgid "Official website:"
+msgstr "官方网站："
+
+msgid "Mesh Status"
+msgstr "Mesh 状态"
+
+msgid "Number of Active Nodes: "
+msgstr "活跃节点数量："
+
+msgid "Interface"
+msgstr "接口"
+
+msgid "Neighbor Nodes"
+msgstr "邻居节点"
+
+msgid "Last Seen Timestamp"
+msgstr "最后在线时间"
+
+msgid "Mesh Settings"
+msgstr "Mesh 设置"
+
+msgid "Basic Setup"
+msgstr "基础设置"
+
+msgid "AP Mode"
+msgstr "AP 模式"
+
+msgid "Advanced Settings"
+msgstr "高级设置"
+
+msgid "Enable Mesh Networking"
+msgstr "启用 Mesh 网络"
+
+msgid "Toggle this switch to activate or deactivate the Mesh Network on this device according to the settings specified in this configuration."
+msgstr "根据配置启用或禁用本设备的 Mesh 网络功能。"
+
+msgid "Mesh Mode"
+msgstr "Mesh 模式"
+
+msgid "Choose whether this device is a <b>Server</b>, <b>Client</b>, or <b>Node</b> in the mesh network."
+msgstr "选择本设备在 Mesh 网络中的角色：<b>服务器</b>、<b>客户端</b>或<b>节点</b>。"
+
+msgid "Server"
+msgstr "服务器"
+
+msgid "Node"
+msgstr "节点"
+
+msgid "Client"
+msgstr "客户端"
+
+msgid "WiFi Network SSID"
+msgstr "WiFi 网络 SSID"
+
+msgid "SSID for the regular WiFi network."
+msgstr "普通 WiFi 网络的名称。"
+
+msgid "Regular AP Radio"
+msgstr "普通 AP 无线设备"
+
+msgid "Select the radio to be used for the regular WiFi access point."
+msgstr "选择用于普通 WiFi 接入点的无线设备。"
+
+msgid "Mesh Radio(s)"
+msgstr "Mesh 无线设备"
+
+msgid "Select a radio interface for mesh backhaul traffic."
+msgstr "选择用于 Mesh 回传流量的无线设备。"
+
+msgid "Mesh Network SSID"
+msgstr "Mesh 网络 SSID"
+
+msgid "<p style=\"text-align: justify; padding: 0;\"><strong>Ensure that the SSID is the same across all the servers/nodes in your mesh network.</strong></p>"
+msgstr "<p style=\"text-align: justify; padding: 0;\"><strong>确保所有服务器/节点使用相同的 SSID。</strong></p>"
+
+msgid "Password Protection"
+msgstr "密码保护"
+
+msgid "<p style=\"text-align: justify; padding: 0;\"><strong>Enable this switch to require a password to join your Mesh Network.</strong></p>"
+msgstr "<p style=\"text-align: justify; padding: 0;\"><strong>启用此选项后，加入 Mesh 网络需输入密码。</strong></p>"
+
+msgid "Mesh Password"
+msgstr "Mesh 密码"
+
+msgid "Reapply EasyMesh Settings"
+msgstr "重新应用 EasyMesh 设置"
+
+msgid "<p style=\"text-align: justify; padding: 0;\"><strong>Use this button to apply/reapply EasyMesh configuration after you Save & Apply.</p></strong>"
+msgstr "<p style=\"text-align: justify; padding: 0;\"><strong>保存并应用配置后，点击此按钮重新加载设置。</p></strong>"
+
+msgid "K/V/R"
+msgstr "K/V/R 协议"
+
+msgid "<p style=\"text-align: justify; padding: 0;\"><strong>Leave these settings as default unless you know what you're doing</p></strong>"
+msgstr "<p style=\"text-align: justify; padding: 0;\"><strong>除非您了解这些参数的作用，否则请保持默认值。</p></strong>"
+
+msgid "Mobility Domain"
+msgstr "移动域"
+
+msgid "Good RSSI Threshold"
+msgstr "良好 RSSI 阈值"
+
+msgid "Bad RSSI Threshold"
+msgstr "差 RSSI 阈值"
+
+msgid "Node Hostname"
+msgstr "节点主机名"
+
+msgid "IP Mode"
+msgstr "IP 模式"
+
+msgid "Choose if the node uses DHCP or a Static IP"
+msgstr "选择节点使用 DHCP 或静态 IP"
+
+msgid "DHCP"
+msgstr "DHCP"
+
+msgid "Static"
+msgstr "静态"
+
+msgid "Static IP Address"
+msgstr "静态 IP 地址"
+
+msgid "Mesh Gateway IP Address"
+msgstr "Mesh 网关 IP 地址"
+
+msgid "IPv4 netmask"
+msgstr "IPv4 子网掩码"
+
+msgid "DNS Server"
+msgstr "DNS 服务器"
+
+msgid "Enable Dumb AP Mode"
+msgstr "启用纯 AP 模式"
+
+msgid "WARNING: THIS WILL CHANGE THIS NODE'S IP ADDRESS, YOU WILL LOOSE ACCESS TO THIS UI"
+msgstr "警告：此操作将修改节点IP地址，可能导致无法访问本管理界面！"
