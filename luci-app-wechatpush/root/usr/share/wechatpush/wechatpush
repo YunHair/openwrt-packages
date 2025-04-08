@@ -263,6 +263,14 @@ main() {
 		if [ "$get_ipv4_mode" -ne "0" ] || [ "$get_ipv6_mode" -ne "0" ]; then
 			check_connect
 			ip_changes
+			    # 如果检测到IP变化，立即推送，避免后续覆盖
+            if [ -n "$title" ] && [ -n "$content" ]; then
+              disturb
+              disturb_RETVAL=$?
+              [ "$disturb_RETVAL" -eq 0 ] && diy_send "${title}" "${content}" "${jsonpath}" >/dev/null 2>&1
+              # 清空 content 和 title 防止重复推送
+            unset title content
+            fi
 		fi
 
 		# 设备列表
@@ -942,20 +950,24 @@ ip_changes() {
 		log_change "${disturb_text}路由器已经重启!"
 		title="路由器重新启动"
 		content="${content}${str_splitline}${str_title_start} 路由器重新启动${str_title_end}"
+		content="${content}${str_linefeed}${str_tab}当前 IPv4：${IPv4:-无}"
+		content="${content}${str_linefeed}${str_tab}当前 IPv6：${IPv6:-无}"
 	fi
 	if [ "$get_ipv4_mode" -ne "0" ] && [ -n "$IPv4" ] && [ "$IPv4" != "$last_IPv4" ]; then
-		log_change "${disturb_text}当前 IP：${IPv4} from：${IPv4_URL}"
-		[ -z "$title" ] && title="IP 地址变化"
-		[ -z "$content" ] && content="${content}${str_splitline}${str_title_start} IP 地址变化${str_title_end}"
-		content="${content}${str_linefeed}${str_tab}当前 IP：  ${IPv4}"
+		 log_change "${disturb_text}IPv4变化：${last_IPv4} → ${IPv4} from：${IPv4_URL}"
+		[ -z "$title" ] && title="IPv4 地址变化"
+		[ -z "$content" ] && content="${content}${str_splitline}${str_title_start} IPv4 地址变化${str_title_end}"
+		content="${content}${str_linefeed}${str_tab}旧IPv4：${last_IPv4:-无}"
+        content="${content}${str_linefeed}${str_tab}新IPv4：${IPv4:-无}"
 		jq --arg IPv4 "$IPv4" '.address[0].IPv4 = $IPv4' "$devices_json" >"$tmp_devices_json" && mv "$tmp_devices_json" "$devices_json"
 
 	fi
 	if [ "$get_ipv6_mode" -ne "0" ] && [ -n "$IPv6" ] && [ "$IPv6" != "$last_IPv6" ]; then
-		log_change "${disturb_text}当前 IPv6：${IPv6} from：${IPv6_URL}"
+		log_change "${disturb_text}IPv6变化：${last_IPv6} → ${IPv6} from：${IPv6_URL}"
 		[ -z "$title" ] && title="IPv6 地址变化"
 		[ -z "$content" ] && content="${content}${str_splitline}${str_title_start} IPv6 地址变化${str_title_end}"
-		content="${content}${str_linefeed}${str_tab}当前 IPv6：${IPv6}"
+		content="${content}${str_linefeed}${str_tab}旧IPv6：${last_IPv6:-无}"
+        content="${content}${str_linefeed}${str_tab}新IPv6：${IPv6:-无}"
 		jq --arg IPv6 "$IPv6" '.address[0].IPv6 = $IPv6' "$devices_json" >"$tmp_devices_json" && mv "$tmp_devices_json" "$devices_json"
 	fi
 
@@ -1948,23 +1960,23 @@ send() {
 	if [ -z "$1" ] && [ -n "$waninfo_enable" ]; then
 		send_content="${send_content}${str_splitline}${str_title_start} WAN 口信息${str_title_end}"
 		if [ "$send_wanIP" == "$send_hostIP" ]; then
-			send_content="${send_content}${str_linefeed}${str_tab}IPv4: ${send_wanIP}"
+			send_content="${send_content}${str_linefeed}${str_tab}IPv4: ${send_wanIP:-无}"
 		elif [ "$get_ipv4_mode" -eq "1" ]; then
-			send_content="${send_content}${str_linefeed}${str_tab}接口 IPv4: ${send_wanIP}"
-			[ -n "$send_hostIP" ] && send_content="${send_content}${str_linefeed}${str_tab}外网 IPv4: ${send_hostIP}"
+			send_content="${send_content}${str_linefeed}${str_tab}接口 IPv4: ${send_wanIP:-无}"
+			[ -n "$send_hostIP" ] && send_content="${send_content}${str_linefeed}${str_tab}外网 IPv4: ${send_hostIP:-无}"
 		elif [ "$get_ipv4_mode" -eq "2" ]; then
-			[ -n "$send_wanIP" ] && send_content="${send_content}${str_linefeed}${str_tab}接口 IPv4: ${send_wanIP}"
-			send_content="${send_content}${str_linefeed}${str_tab}外网 IPv4: ${send_hostIP}"
+			[ -n "$send_wanIP" ] && send_content="${send_content}${str_linefeed}${str_tab}接口 IPv4: ${send_wanIP:-无}"
+			send_content="${send_content}${str_linefeed}${str_tab}外网 IPv4: ${send_hostIP:-无}"
 		fi
 		if [ -n "$ipv6_enable" ]; then
 			if [ "$send_wanIPv6" == "$send_hostIPv6" ]; then
-				send_content="${send_content}${str_linefeed}${str_tab}IPv6: ${send_wanIPv6}"
+				send_content="${send_content}${str_linefeed}${str_tab}IPv6: ${send_wanIPv6:-无}"
 			elif [ "$get_ipv6_mode" -eq "1" ]; then
-				send_content="${send_content}${str_linefeed}${str_tab}接口 IPv6: ${send_wanIPv6}"
-				[ -n "$send_hostIPv6" ] && send_content="${send_content}${str_linefeed}${str_tab}外网 IPv6: ${send_hostIPv6}"
+				send_content="${send_content}${str_linefeed}${str_tab}接口 IPv6: ${send_wanIPv6:-无}"
+				[ -n "$send_hostIPv6" ] && send_content="${send_content}${str_linefeed}${str_tab}外网 IPv6: ${send_hostIPv6:-无}"
 			elif [ "$get_ipv6_mode" -eq "2" ]; then
-				[ -n "$send_wanIPv6" ] && send_content="${send_content}${str_linefeed}${str_tab}接口 IPv6: ${send_wanIPv6}"
-				send_content="${send_content}${str_linefeed}${str_tab}外网 IPv6: ${send_hostIPv6}"
+				[ -n "$send_wanIPv6" ] && send_content="${send_content}${str_linefeed}${str_tab}接口 IPv6: ${send_wanIPv6:-无}"
+				send_content="${send_content}${str_linefeed}${str_tab}外网 IPv6: ${send_hostIPv6:-无}"
 			fi
 		fi
 		interfaceuptime=$(getinterfaceuptime)
