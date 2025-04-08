@@ -1960,23 +1960,23 @@ send() {
 	if [ -z "$1" ] && [ -n "$waninfo_enable" ]; then
 		send_content="${send_content}${str_splitline}${str_title_start} WAN 口信息${str_title_end}"
 		if [ "$send_wanIP" == "$send_hostIP" ]; then
-			send_content="${send_content}${str_linefeed}${str_tab}IPv4: ${send_wanIP:-无}"
+			send_content="${send_content}${str_linefeed}${str_tab}IPv4:  ${send_wanIP:-无}"
 		elif [ "$get_ipv4_mode" -eq "1" ]; then
-			send_content="${send_content}${str_linefeed}${str_tab}接口 IPv4: ${send_wanIP:-无}"
-			[ -n "$send_hostIP" ] && send_content="${send_content}${str_linefeed}${str_tab}外网 IPv4: ${send_hostIP:-无}"
+			send_content="${send_content}${str_linefeed}${str_tab}接口 IPv4:  ${send_wanIP:-无}"
+			[ -n "$send_hostIP" ] && send_content="${send_content}${str_linefeed}${str_tab}外网 IPv4:  ${send_hostIP:-无}"
 		elif [ "$get_ipv4_mode" -eq "2" ]; then
-			[ -n "$send_wanIP" ] && send_content="${send_content}${str_linefeed}${str_tab}接口 IPv4: ${send_wanIP:-无}"
-			send_content="${send_content}${str_linefeed}${str_tab}外网 IPv4: ${send_hostIP:-无}"
+			[ -n "$send_wanIP" ] && send_content="${send_content}${str_linefeed}${str_tab}接口 IPv4:  ${send_wanIP:-无}"
+			send_content="${send_content}${str_linefeed}${str_tab}外网 IPv4:  ${send_hostIP:-无}"
 		fi
 		if [ -n "$ipv6_enable" ]; then
 			if [ "$send_wanIPv6" == "$send_hostIPv6" ]; then
-				send_content="${send_content}${str_linefeed}${str_tab}IPv6: ${send_wanIPv6:-无}"
+				send_content="${send_content}${str_linefeed}${str_tab}IPv6:  ${send_wanIPv6:-无}"
 			elif [ "$get_ipv6_mode" -eq "1" ]; then
-				send_content="${send_content}${str_linefeed}${str_tab}接口 IPv6: ${send_wanIPv6:-无}"
-				[ -n "$send_hostIPv6" ] && send_content="${send_content}${str_linefeed}${str_tab}外网 IPv6: ${send_hostIPv6:-无}"
+				send_content="${send_content}${str_linefeed}${str_tab}接口 IPv6:  ${send_wanIPv6:-无}"
+				[ -n "$send_hostIPv6" ] && send_content="${send_content}${str_linefeed}${str_tab}外网 IPv6:  ${send_hostIPv6:-无}"
 			elif [ "$get_ipv6_mode" -eq "2" ]; then
-				[ -n "$send_wanIPv6" ] && send_content="${send_content}${str_linefeed}${str_tab}接口 IPv6: ${send_wanIPv6:-无}"
-				send_content="${send_content}${str_linefeed}${str_tab}外网 IPv6: ${send_hostIPv6:-无}"
+				[ -n "$send_wanIPv6" ] && send_content="${send_content}${str_linefeed}${str_tab}接口 IPv6:  ${send_wanIPv6:-无}"
+				send_content="${send_content}${str_linefeed}${str_tab}外网 IPv6:  ${send_hostIPv6:-无}"
 			fi
 		fi
 		interfaceuptime=$(getinterfaceuptime)
