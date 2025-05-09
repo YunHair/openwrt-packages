@@ -70,9 +70,10 @@ jobs:
         #- {package_name: luci-app-easymesh, source_repo: torguardvpn/luci-app-easymesh, source_branch: main }
         - {package_name: luci-app-easytier, source_repo: EasyTier/luci-app-easytier, source_branch: main }
         - {package_name: luci-app-tailscale, source_repo: asvow/luci-app-tailscale, source_branch: main }
-        - {package_name: luci-app-homeproxy, source_repo: muink/luci-app-homeproxy, source_branch: master }
+        #- {package_name: luci-app-homeproxy, source_repo: muink/luci-app-homeproxy, source_branch: master }
         #- {package_name: luci-app-nginx-manager, source_repo: kiddin9/kwrt-packages, source_branch: master }
         #- {package_name: supervisor, source_repo: VergilGao/openwrt-supervisor, source_branch: master }
+        - {package_name: luci-app-cloudflared, source_repo: lmq8267/luci-app-cloudflared, source_branch: main,source_path: luci-app-cloudflared }
             
         " > "$repos_file"
 
