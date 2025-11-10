@@ -1,0 +1,63 @@
+name: Clean Repository Completely
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "Y" to confirm'
+        required: true
+        default: 'NO'
+    branches: [ main ]
+
+# 关键：设置工作流权限
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  clean-repository:
+    runs-on: ubuntu-latest
+    
+    # 严格的确认检查
+    if: ${{ github.event.inputs.confirm == 'Y' }}
+    
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN || secrets.REPO_TOKEN }}
+          fetch-depth: 0  # 获取完整历史
+
+      - name: Setup Git identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create completely clean branch
+        run: |
+          # 创建孤儿分支（无历史）
+          git checkout --orphan temp-clean-branch
+          
+          # 只保留 .github 目录
+          if [ -d ".github" ]; then
+            git add .github/
+          fi
+          
+          # 初始提交
+          git commit -m "Clean repository: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          echo "✅ 新分支创建完成"
+
+      - name: Replace main branch
+        run: |
+          # 删除原 main 分支
+          git branch -D main
+          # 重命名新分支为 main
+          git branch -m main
+          # 强制推送
+          git push -f origin main
+          echo "✅ 仓库已清空，仅保留 .github 目录"
+
+      - name: Verify cleanup
+        run: |
+          echo "清理后的文件结构："
+          find . -type f -o -type d | sort

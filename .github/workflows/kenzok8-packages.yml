@@ -1,0 +1,60 @@
+name: Sync and Replace File
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # 每天执行4次，即每6小时一次 (UTC时间)
+  workflow_dispatch: # 允许手动触发
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  sync-and-replace:
+    runs-on: ubuntu-latest
+    steps:
+      # 步骤1: 检出你的仓库内容
+      - name: Checkout your repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.REPO_TOKEN }}
+
+      # 步骤2: 从源仓库拉取内容
+      - name: Pull from source repo
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@users.noreply.github.com"
+          git remote add source https://github.com/kenzok8/small-package.git
+          git fetch source
+          git merge source/main --allow-unrelated-histories -m "Auto-sync: $(date +'%Y-%m-%d %H:%M:%S')"
+
+      # 步骤3: 下载并替换 qywx_markdown.json 文件
+      - name: Replace luci-app-wechatpush qywx_markdown.json
+        run: |
+          # 创建目标目录
+          mkdir -p luci-app-wechatpush/root/usr/share/wechatpush/api/
+          
+          # 下载并替换文件 (使用 raw.githubusercontent.com 获取原始文件)
+          curl -f -L -o luci-app-wechatpush/root/usr/share/wechatpush/api/qywx_markdown.json \
+            https://raw.githubusercontent.com/YunHair/luci-app-wechatpush/master/root/usr/share/wechatpush/api/qywx_markdown.json
+          
+          # 检查文件是否成功下载
+          if [ ! -f "luci-app-wechatpush/root/usr/share/wechatpush/api/qywx_markdown.json" ]; then
+            echo "错误：文件下载失败"
+            exit 1
+          fi
+          
+          echo "✅ qywx_markdown.json 文件替换成功"
+
+      # 步骤4: 提交并推送更改
+      - name: Commit and push changes
+        run: |
+          git add .
+          if git diff --staged --quiet; then
+            echo "没有变化需要提交"
+          else
+            git commit -m "Auto-sync and file replace: $(date +'%Y-%m-%d %H:%M:%S')"
+            git push origin main
+            echo "✅ 更改已提交并推送"
+          fi
