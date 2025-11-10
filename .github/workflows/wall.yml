@@ -1,13 +1,13 @@
-name: Sync packages
+name: Sync packages 原kenzok8
 
 on:
-  push:
-    paths:
-      - '.github/workflows/wall.yml'
-      - '.github/diy/main.sh'
-  schedule:
-    - cron: 0 */4 * * *
-  repository_dispatch:
+  #push:
+  #  paths:
+   #   - '.github/workflows/wall.yml'
+   #   - '.github/diy/main.sh'
+  #schedule:
+   # - cron: 0 */4 * * *
+  #repository_dispatch:
   workflow_dispatch:
     inputs:
       packages:

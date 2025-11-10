@@ -1,0 +1,74 @@
+name: Sync kenzok8-packages
+
+on:
+  schedule:
+    - cron: '10 */4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-and-replace:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout your repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.REPO_TOKEN }}
+          fetch-depth: 0  # 获取完整历史
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@users.noreply.github.com"
+
+      - name: Backup workflows
+        run: |
+          # 备份 .github/workflows 目录
+          if [ -d ".github/workflows" ]; then
+            mkdir -p /tmp/workflows-backup
+            cp -r .github/workflows/* /tmp/workflows-backup/
+            echo "✅ Workflows 备份完成"
+          else
+            echo "⚠️ 没有找到 .github/workflows 目录"
+          fi
+
+      - name: Sync from source (force overwrite)
+        run: |
+          git remote add source https://github.com/kenzok8/small-package.git || true
+          git fetch source
+          
+          # 重置到源仓库状态
+          git reset --hard source/main
+          
+          echo "✅ 同步完成"
+
+      - name: Restore workflows
+        run: |
+          # 恢复备份的 workflows
+          if [ -d "/tmp/workflows-backup" ]; then
+            mkdir -p .github/workflows
+            cp -r /tmp/workflows-backup/* .github/workflows/
+            echo "✅ Workflows 恢复完成"
+          else
+            echo "⚠️ 没有找到备份文件"
+          fi
+
+      - name: Replace qywx_markdown.json
+        run: |
+          mkdir -p luci-app-wechatpush/root/usr/share/wechatpush/api/
+          
+          curl -f -L -o luci-app-wechatpush/root/usr/share/wechatpush/api/qywx_markdown.json \
+            https://raw.githubusercontent.com/YunHair/luci-app-wechatpush/master/root/usr/share/wechatpush/api/qywx_markdown.json
+          
+          echo "✅ qywx_markdown.json 文件替换成功"
+
+      - name: Commit and force push changes
+        run: |
+          git add .
+          git commit -m "Auto-sync and file replace: $(date +'%Y-%m-%d %H:%M:%S')" || echo "没有变化需要提交"
+          
+          # 使用强制推送
+          git push --force-with-lease origin main
+          echo "✅ 更改已强制推送"
