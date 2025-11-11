@@ -18,6 +18,12 @@ repositories:
     branch: "main"
     type: "full"
     target_dir: "luci-app-advancedplus"
+
+  - name: "eamonxg-luci-theme-aurora"
+    url: "https://github.com/eamonxg/luci-theme-aurora"
+    branch: "master"
+    type: "full"
+    target_dir: "luci-theme-aurora"
   
   # VIKINGYFY 网络唤醒插件
   - name: "VIKINGYFY-wolplus"
