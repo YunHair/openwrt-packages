@@ -1,74 +1,173 @@
-name: Sync kenzok8-packages
+name: Sync kenzok8 and other packages
 
 on:
   schedule:
-    - cron: '10 */4 * * *'
+    - cron: '10 */12 * * *'  # 每12小时执行一次
   workflow_dispatch:
+    inputs:
+      config_file:
+        description: '配置文件路径（可选）'
+        required: false
+        default: '.github/workflows/sync-config.yaml'
 
 permissions:
   contents: write
 
 jobs:
-  sync-and-replace:
+  sync-repositories:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout your repo
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.REPO_TOKEN }}
-          fetch-depth: 0  # 获取完整历史
+          fetch-depth: 0
 
       - name: Configure Git
         run: |
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@users.noreply.github.com"
 
-      - name: Backup workflows
+      - name: Read sync configuration
+        id: config
         run: |
-          # 备份 .github/workflows 目录
-          if [ -d ".github/workflows" ]; then
-            mkdir -p /tmp/workflows-backup
-            cp -r .github/workflows/* /tmp/workflows-backup/
-            echo "✅ Workflows 备份完成"
-          else
-            echo "⚠️ 没有找到 .github/workflows 目录"
+          CONFIG_FILE="${{ github.event.inputs.config_file || '.github/workflows/sync-config.yaml' }}"
+          if [ ! -f "$CONFIG_FILE" ]; then
+            echo "错误: 配置文件 $CONFIG_FILE 不存在"
+            exit 1
+          fi
+          echo "config_file=$CONFIG_FILE" >> $GITHUB_OUTPUT
+          echo "✅ 使用配置文件: $CONFIG_FILE"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq unzip yq  # 添加 yq 用于 YAML 解析
+
+      - name: Backup current workflows and config
+        run: |
+          # 备份整个 .github 目录
+          if [ -d ".github" ]; then
+            mkdir -p /tmp/github-backup
+            cp -r .github/* /tmp/github-backup/
+            echo "✅ .github 目录备份完成"
           fi
 
-      - name: Sync from source (force overwrite)
+      - name: Clean current repository (keep .git and .github)
         run: |
-          git remote add source https://github.com/kenzok8/small-package.git || true
-          git fetch source
-          
-          # 重置到源仓库状态
-          git reset --hard source/main
-          
-          echo "✅ 同步完成"
+          echo "🧹 清理当前仓库内容..."
+          find . -mindepth 1 -maxdepth 1 \
+            -not -name '.git' \
+            -not -name '.github' \
+            -exec rm -rf {} + 2>/dev/null || true
+          echo "✅ 仓库清理完成"
 
-      - name: Restore workflows
+      - name: Sync repositories
+        env:
+          CONFIG_FILE: ${{ steps.config.outputs.config_file }}
         run: |
-          # 恢复备份的 workflows
-          if [ -d "/tmp/workflows-backup" ]; then
-            mkdir -p .github/workflows
-            cp -r /tmp/workflows-backup/* .github/workflows/
-            echo "✅ Workflows 恢复完成"
-          else
-            echo "⚠️ 没有找到备份文件"
+          echo "📦 开始同步仓库..."
+          
+          # 使用 yq 解析 YAML 配置
+          repo_count=$(yq e '.repositories | length' "$CONFIG_FILE")
+          echo "找到 $repo_count 个仓库需要同步"
+          
+          for i in $(seq 0 $((repo_count - 1))); do
+            repo_name=$(yq e ".repositories[$i].name" "$CONFIG_FILE")
+            repo_url=$(yq e ".repositories[$i].url" "$CONFIG_FILE")
+            repo_branch=$(yq e ".repositories[$i].branch // \"main\"" "$CONFIG_FILE")
+            repo_type=$(yq e ".repositories[$i].type // \"full\"" "$CONFIG_FILE")
+            target_dir=$(yq e ".repositories[$i].target_dir // \"\"" "$CONFIG_FILE")
+            source_path=$(yq e ".repositories[$i].source_path // \"\"" "$CONFIG_FILE")
+            
+            echo "🔄 同步仓库: $repo_name ($repo_url@$repo_branch)"
+            
+            # 创建临时目录
+            TEMP_DIR="/tmp/repo_$i"
+            mkdir -p "$TEMP_DIR"
+            
+            # 下载并解压仓库
+            if curl -L -f -o "$TEMP_DIR/repo.zip" "$repo_url/archive/refs/heads/$repo_branch.zip"; then
+              if unzip -q "$TEMP_DIR/repo.zip" -d "$TEMP_DIR"; then
+                # 获取解压后的目录名
+                EXTRACTED_DIR=$(find "$TEMP_DIR" -maxdepth 1 -type d -name "*" | grep -v "^$TEMP_DIR$" | head -1)
+                
+                if [ -n "$EXTRACTED_DIR" ] && [ -d "$EXTRACTED_DIR" ]; then
+                  if [ "$repo_type" = "full" ]; then
+                    # 完整仓库同步
+                    if [ -n "$target_dir" ]; then
+                      mkdir -p "$(dirname "$target_dir")"
+                      cp -r "$EXTRACTED_DIR" "$target_dir"
+                      echo "✅ 完整仓库同步到: $target_dir"
+                    else
+                      cp -r "$EXTRACTED_DIR"/* ./
+                      echo "✅ 完整仓库同步到根目录"
+                    fi
+                  elif [ "$repo_type" = "partial" ] && [ -n "$source_path" ]; then
+                    # 部分文件夹同步
+                    if [ -d "$EXTRACTED_DIR/$source_path" ]; then
+                      mkdir -p "$target_dir"
+                      cp -r "$EXTRACTED_DIR/$source_path"/* "$target_dir"/
+                      echo "✅ 部分同步: $source_path -> $target_dir"
+                    else
+                      echo "⚠️ 源路径不存在: $EXTRACTED_DIR/$source_path"
+                    fi
+                  else
+                    echo "⚠️ 未知的同步类型或缺少参数: type=$repo_type, source_path=$source_path"
+                  fi
+                else
+                  echo "❌ 无法找到解压后的目录"
+                fi
+              else
+                echo "❌ 解压失败: $TEMP_DIR/repo.zip"
+              fi
+            else
+              echo "❌ 下载失败: $repo_url/archive/refs/heads/$repo_branch.zip"
+            fi
+            
+            # 清理临时文件
+            rm -rf "$TEMP_DIR"
+          done
+
+      - name: Restore workflows and config
+        run: |
+          if [ -d "/tmp/github-backup" ]; then
+            # 恢复整个 .github 目录
+            mkdir -p .github
+            cp -r /tmp/github-backup/* .github/
+            echo "✅ .github 目录恢复完成"
           fi
 
-      - name: Replace qywx_markdown.json
+      - name: Apply file replacements
+        env:
+          CONFIG_FILE: ${{ steps.config.outputs.config_file }}
         run: |
-          mkdir -p luci-app-wechatpush/root/usr/share/wechatpush/api/
+          echo "🔄 开始应用文件替换..."
           
-          curl -f -L -o luci-app-wechatpush/root/usr/share/wechatpush/api/qywx_markdown.json \
-            https://raw.githubusercontent.com/YunHair/luci-app-wechatpush/master/root/usr/share/wechatpush/api/qywx_markdown.json
+          replacement_count=$(yq e '.file_replacements | length' "$CONFIG_FILE")
+          echo "找到 $replacement_count 个文件需要替换"
           
-          echo "✅ qywx_markdown.json 文件替换成功"
+          for i in $(seq 0 $((replacement_count - 1))); do
+            replacement_name=$(yq e ".file_replacements[$i].name" "$CONFIG_FILE")
+            source_url=$(yq e ".file_replacements[$i].source_url" "$CONFIG_FILE")
+            target_path=$(yq e ".file_replacements[$i].target_path" "$CONFIG_FILE")
+            
+            echo "📄 替换文件: $replacement_name -> $target_path"
+            mkdir -p "$(dirname "$target_path")"
+            if curl -f -L -o "$target_path" "$source_url"; then
+              echo "✅ 替换成功: $target_path"
+            else
+              echo "❌ 替换失败: $target_path"
+            fi
+          done
 
-      - name: Commit and force push changes
+      - name: Commit and push changes
         run: |
           git add .
-          git commit -m "Auto-sync and file replace: $(date +'%Y-%m-%d %H:%M:%S')" || echo "没有变化需要提交"
-          
-          # 使用强制推送
-          git push --force-with-lease origin main
-          echo "✅ 更改已强制推送"
+          if git diff --staged --quiet; then
+            echo "📝 没有变化需要提交"
+          else
+            git commit -m "Auto-sync: $(date +'%Y-%m-%d %H:%M:%S') - Multi-repository sync"
+            git push origin main
+            echo "✅ 更改已推送"
+          fi
