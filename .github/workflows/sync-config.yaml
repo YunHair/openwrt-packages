@@ -1,0 +1,49 @@
+# 同步配置 - 自动从多个仓库同步软件包
+# 最后更新: 2024-01-01
+
+# 仓库同步配置
+repositories:
+  # kenzok8 小型软件包集合 - 同步到根目录
+  - name: "kenzok8-small-package"
+    url: "https://github.com/kenzok8/small-package"
+    branch: "main"
+    type: "full"  # full: 完整同步, partial: 部分同步
+    target_dir: ""  # 目标目录，空表示根目录
+    excludes:
+      - ".github/workflows"  # 排除 workflows 目录，避免覆盖配置
+  
+  # sirpdboy 高级插件 - 完整同步到指定目录
+  - name: "sirpdboy-advancedplus"
+    url: "https://github.com/sirpdboy/luci-app-advancedplus"
+    branch: "main"
+    type: "full"
+    target_dir: "luci-app-advancedplus"
+  
+  # VIKINGYFY 网络唤醒插件
+  - name: "VIKINGYFY-wolplus"
+    url: "https://github.com/VIKINGYFY/packages"
+    branch: "main"
+    type: "partial"
+    source_path: "luci-app-wolplus"  # 只同步源仓库的这个文件夹
+    target_dir: "VIKINGYFY/luci-app-wolplus"
+  
+  # VIKINGYFY 定时网络唤醒插件
+  - name: "VIKINGYFY-timewol"
+    url: "https://github.com/VIKINGYFY/packages"
+    branch: "main"
+    type: "partial"
+    source_path: "luci-app-timewol"
+    target_dir: "VIKINGYFY/luci-app-timewol"
+
+# 文件替换配置 - 在同步后替换特定文件
+file_replacements:
+  # 替换微信推送的企业微信 markdown 配置
+  - name: "qywx_markdown.json"
+    source_url: "https://raw.githubusercontent.com/YunHair/luci-app-wechatpush/master/root/usr/share/wechatpush/api/qywx_markdown.json"
+    target_path: "luci-app-wechatpush/root/usr/share/wechatpush/api/qywx_markdown.json"
+
+# 配置版本信息
+config_info:
+  version: "1.0"
+  description: "多仓库自动同步配置"
+  author: "YunHair"
