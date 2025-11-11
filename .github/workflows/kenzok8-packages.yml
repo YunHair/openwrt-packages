@@ -42,7 +42,13 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y jq unzip yq  # 添加 yq 用于 YAML 解析
+          sudo apt-get install -y jq unzip
+          # 安装 Go 版本的 yq（更稳定）
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          # 验证安装
+          yq --version
+          echo "✅ 依赖安装完成"
 
       - name: Backup current workflows and config
         run: |
@@ -69,16 +75,16 @@ jobs:
           echo "📦 开始同步仓库..."
           
           # 使用 yq 解析 YAML 配置
-          repo_count=$(yq e '.repositories | length' "$CONFIG_FILE")
+          repo_count=$(yq '.repositories | length' "$CONFIG_FILE")
           echo "找到 $repo_count 个仓库需要同步"
           
           for i in $(seq 0 $((repo_count - 1))); do
-            repo_name=$(yq e ".repositories[$i].name" "$CONFIG_FILE")
-            repo_url=$(yq e ".repositories[$i].url" "$CONFIG_FILE")
-            repo_branch=$(yq e ".repositories[$i].branch // \"main\"" "$CONFIG_FILE")
-            repo_type=$(yq e ".repositories[$i].type // \"full\"" "$CONFIG_FILE")
-            target_dir=$(yq e ".repositories[$i].target_dir // \"\"" "$CONFIG_FILE")
-            source_path=$(yq e ".repositories[$i].source_path // \"\"" "$CONFIG_FILE")
+            repo_name=$(yq ".repositories[$i].name" "$CONFIG_FILE")
+            repo_url=$(yq ".repositories[$i].url" "$CONFIG_FILE")
+            repo_branch=$(yq ".repositories[$i].branch // \"main\"" "$CONFIG_FILE")
+            repo_type=$(yq ".repositories[$i].type // \"full\"" "$CONFIG_FILE")
+            target_dir=$(yq ".repositories[$i].target_dir // \"\"" "$CONFIG_FILE")
+            source_path=$(yq ".repositories[$i].source_path // \"\"" "$CONFIG_FILE")
             
             echo "🔄 同步仓库: $repo_name ($repo_url@$repo_branch)"
             
@@ -129,6 +135,8 @@ jobs:
             rm -rf "$TEMP_DIR"
           done
 
+          echo "🎉 所有仓库同步完成"
+
       - name: Restore workflows and config
         run: |
           if [ -d "/tmp/github-backup" ]; then
@@ -144,13 +152,13 @@ jobs:
         run: |
           echo "🔄 开始应用文件替换..."
           
-          replacement_count=$(yq e '.file_replacements | length' "$CONFIG_FILE")
+          replacement_count=$(yq '.file_replacements | length' "$CONFIG_FILE")
           echo "找到 $replacement_count 个文件需要替换"
           
           for i in $(seq 0 $((replacement_count - 1))); do
-            replacement_name=$(yq e ".file_replacements[$i].name" "$CONFIG_FILE")
-            source_url=$(yq e ".file_replacements[$i].source_url" "$CONFIG_FILE")
-            target_path=$(yq e ".file_replacements[$i].target_path" "$CONFIG_FILE")
+            replacement_name=$(yq ".file_replacements[$i].name" "$CONFIG_FILE")
+            source_url=$(yq ".file_replacements[$i].source_url" "$CONFIG_FILE")
+            target_path=$(yq ".file_replacements[$i].target_path" "$CONFIG_FILE")
             
             echo "📄 替换文件: $replacement_name -> $target_path"
             mkdir -p "$(dirname "$target_path")"
@@ -160,6 +168,8 @@ jobs:
               echo "❌ 替换失败: $target_path"
             fi
           done
+
+          echo "🎉 文件替换完成"
 
       - name: Commit and push changes
         run: |
