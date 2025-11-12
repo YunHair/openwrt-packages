@@ -1,4 +1,4 @@
-name: Sync kenzok8 and other packages
+name: Sync kenzok8 Packages
 
 on:
   schedule:
@@ -24,6 +24,14 @@ jobs:
 
       - name: Install deps
         run: pip install toml
+
+      - name: Cleanup old workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ secrets.REPO_TOKEN }}
+          repository: ${{ github.repository }}
+          retain_days: 1
+          keep_minimum_runs: 3
 
       - name: Backup workflows
         run: |
