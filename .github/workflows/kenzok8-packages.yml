@@ -25,14 +25,6 @@ jobs:
       - name: Install deps
         run: pip install toml
 
-      - name: Cleanup old workflow runs
-        uses: Mattraks/delete-workflow-runs@v2
-        with:
-          token: ${{ secrets.REPO_TOKEN }}
-          repository: ${{ github.repository }}
-          retain_days: 1
-          keep_minimum_runs: 3
-
       - name: Backup workflows
         run: |
           mkdir -p /tmp/backup
@@ -47,65 +39,88 @@ jobs:
 
       - name: Sync repositories
         run: |
-        python3 << 'EOF'
-import toml, os, subprocess, tempfile, shutil
+          python3 << 'EOF'
+          import toml, os, subprocess, tempfile, shutil
+          
+          config = toml.load('.github/workflows/sync-config.toml')
+          
+          for repo in config['repositories']:
+              print(f"🔄 Syncing {repo['name']}...")
+              
+              with tempfile.TemporaryDirectory() as tmpdir:
+                  # 下载仓库
+                  zip_url = f"{repo['url']}/archive/refs/heads/{repo.get('branch', 'main')}.zip"
+                  zip_file = os.path.join(tmpdir, "repo.zip")
+                  
+                  subprocess.run(['curl', '-sL', '-o', zip_file, zip_url], check=True)
+                  subprocess.run(['unzip', '-q', zip_file, '-d', tmpdir], check=True)
+                  
+                  # 找到解压目录
+                  extracted = [d for d in os.listdir(tmpdir) 
+                             if os.path.isdir(os.path.join(tmpdir, d)) and not d.startswith('__')][0]
+                  src_dir = os.path.join(tmpdir, extracted)
+                  
+                  if repo.get('type') == 'partial':
+                      # 部分同步
+                      src_path = os.path.join(src_dir, repo['source_path'])
+                      target_dir = repo['target_dir']
+                      if os.path.exists(src_path):
+                          os.makedirs(target_dir, exist_ok=True)
+                          # 清空目标目录（如果存在）
+                          if os.path.exists(target_dir):
+                              shutil.rmtree(target_dir)
+                          shutil.copytree(src_path, target_dir)
+                          print(f"✅ Partial sync: {repo['source_path']} -> {target_dir}")
+                      else:
+                          print(f"❌ Source path not found: {src_path}")
+                  else:
+                      # 完整同步
+                      target_dir = repo.get('target_dir', '.')
+                      if target_dir and target_dir != '.':
+                          os.makedirs(target_dir, exist_ok=True)
+                          # 清空目标目录（如果存在）
+                          if os.path.exists(target_dir):
+                              shutil.rmtree(target_dir)
+                          shutil.copytree(src_dir, target_dir)
+                          print(f"✅ Full sync to: {target_dir}")
+                      else:
+                          # 同步到根目录
+                          for item in os.listdir(src_dir):
+                              src_item = os.path.join(src_dir, item)
+                              dst_item = os.path.join('.', item)
+                              if os.path.isdir(src_item):
+                                  if os.path.exists(dst_item):
+                                      shutil.rmtree(dst_item)
+                                  shutil.copytree(src_item, dst_item)
+                              else:
+                                  shutil.copy2(src_item, dst_item)
+                          print("✅ Full sync to root")
+          
+          print("🎉 All repositories synced!")
+          EOF
 
-config = toml.load('.github/workflows/sync-config.toml')
+      - name: Restore workflows
+        run: |
+          if [ -d "/tmp/backup/workflows" ]; then
+            mkdir -p .github/workflows
+            cp -r /tmp/backup/workflows/* .github/workflows/
+            echo "✅ Workflows restored"
+          fi
 
-for repo in config['repositories']:
-    print(f"🔄 Syncing {repo['name']}...")
-    
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # 下载仓库
-        zip_url = f"{repo['url']}/archive/refs/heads/{repo.get('branch', 'main')}.zip"
-        zip_file = os.path.join(tmpdir, "repo.zip")
-        
-        subprocess.run(['curl', '-sL', '-o', zip_file, zip_url], check=True)
-        subprocess.run(['unzip', '-q', zip_file, '-d', tmpdir], check=True)
-        
-        # 找到解压目录
-        extracted = [d for d in os.listdir(tmpdir) 
-                   if os.path.isdir(os.path.join(tmpdir, d)) and not d.startswith('__')][0]
-        src_dir = os.path.join(tmpdir, extracted)
-        
-        if repo.get('type') == 'partial':
-            # 部分同步
-            src_path = os.path.join(src_dir, repo['source_path'])
-            target_dir = repo['target_dir']
-            if os.path.exists(src_path):
-                os.makedirs(target_dir, exist_ok=True)
-                # 清空目标目录（如果存在）
-                if os.path.exists(target_dir):
-                    shutil.rmtree(target_dir)
-                shutil.copytree(src_path, target_dir)
-                print(f"✅ Partial sync: {repo['source_path']} -> {target_dir}")
-            else:
-                print(f"❌ Source path not found: {src_path}")
-        else:
-            # 完整同步
-            target_dir = repo.get('target_dir', '.')
-            if target_dir and target_dir != '.':
-                os.makedirs(target_dir, exist_ok=True)
-                # 清空目标目录（如果存在）
-                if os.path.exists(target_dir):
-                    shutil.rmtree(target_dir)
-                shutil.copytree(src_dir, target_dir)
-                print(f"✅ Full sync to: {target_dir}")
-            else:
-                # 同步到根目录
-                for item in os.listdir(src_dir):
-                    src_item = os.path.join(src_dir, item)
-                    dst_item = os.path.join('.', item)
-                    if os.path.isdir(src_item):
-                        if os.path.exists(dst_item):
-                            shutil.rmtree(dst_item)
-                        shutil.copytree(src_item, dst_item)
-                    else:
-                        shutil.copy2(src_item, dst_item)
-                print("✅ Full sync to root")
-
-print("🎉 All repositories synced!")
-EOF
+      - name: Replace files
+        run: |
+          python3 << 'EOF'
+          import toml, urllib.request, os
+          
+          config = toml.load('.github/workflows/sync-config.toml')
+          
+          for file in config.get('file_replacements', []):
+              os.makedirs(os.path.dirname(file['target_path']), exist_ok=True)
+              urllib.request.urlretrieve(file['source_url'], file['target_path'])
+              print(f"📄 Replaced {file['target_path']}")
+          
+          print("✅ File replacements completed")
+          EOF
 
       - name: Commit and push
         run: |
@@ -117,3 +132,11 @@ EOF
             git push
             echo "✅ Changes pushed"
           fi
+
+      - name: Cleanup old workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ secrets.REPO_TOKEN }}
+          repository: ${{ github.repository }}
+          retain_days: 1
+          keep_minimum_runs: 3
