@@ -37,7 +37,7 @@ jobs:
           find . -maxdepth 1 -not -name '.git' -not -name '.github' -exec rm -rf {} + 2>/dev/null || true
           echo "Repository cleaned"
 
-            - name: Sync repositories
+      - name: Sync repositories
         run: |
           python3 << 'EOF'
           import toml, os, subprocess, tempfile, shutil
