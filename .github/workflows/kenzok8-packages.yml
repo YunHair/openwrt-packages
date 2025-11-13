@@ -2,7 +2,7 @@ name: Sync kenzok8 Packages
 
 on:
   schedule:
-    - cron: '10 */12 * * *'
+    - cron: '10 */4 * * *'
   workflow_dispatch:
 
 permissions:
@@ -144,5 +144,5 @@ jobs:
         with:
           token: ${{ secrets.REPO_TOKEN }}
           repository: ${{ github.repository }}
-          #retain_days: 1
+          retain_days: 1
           keep_minimum_runs: 6
