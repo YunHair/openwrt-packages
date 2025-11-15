@@ -1,0 +1,220 @@
+name: Smart Sync Packages
+
+on:
+  schedule:
+    - cron: '10 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  smart-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.REPO_TOKEN }}
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Install dependencies
+        run: pip install toml
+
+      - name: Backup workflows
+        run: |
+          mkdir -p /tmp/backup
+          cp -r .github/workflows /tmp/backup/
+          echo "Workflows backed up"
+
+      - name: Clean repository
+        run: |
+          find . -maxdepth 1 -not -name '.git' -not -name '.github' -exec rm -rf {} + 2>/dev/null || true
+          echo "Repository cleaned"
+
+      - name: Sync repositories
+        run: |
+          python3 << 'EOF'
+          import toml
+          import os
+          import subprocess
+          import tempfile
+          import shutil
+          
+          config = toml.load('.github/workflows/sync-config.toml')
+          
+          print("Starting repository sync...")
+          
+          target_dirs = {}
+          for repo in config['repositories']:
+              target_dir = repo.get('target_dir', '.')
+              if target_dir and target_dir != '.':
+                  target_dirs[target_dir] = repo['name']
+          
+          print(f"Target directories: {list(target_dirs.keys())}")
+          
+          for repo in config['repositories']:
+              repo_name = repo['name']
+              repo_url = repo['url']
+              branch = repo.get('branch', 'main')
+              repo_type = repo.get('type', 'full')
+              target_dir = repo.get('target_dir', '.')
+              
+              print(f"Syncing {repo_name} to {target_dir}")
+              
+              with tempfile.TemporaryDirectory() as tmpdir:
+                  zip_url = f"{repo_url}/archive/refs/heads/{branch}.zip"
+                  zip_file = os.path.join(tmpdir, "repo.zip")
+                  
+                  try:
+                      subprocess.run(['curl', '-sL', '-o', zip_file, zip_url], check=True)
+                      subprocess.run(['unzip', '-q', zip_file, '-d', tmpdir], check=True)
+                      
+                      extracted_dirs = [d for d in os.listdir(tmpdir) 
+                                      if os.path.isdir(os.path.join(tmpdir, d)) and not d.startswith('__')]
+                      if not extracted_dirs:
+                          print(f"No directories found for {repo_name}")
+                          continue
+                          
+                      extracted = extracted_dirs[0]
+                      src_dir = os.path.join(tmpdir, extracted)
+                      
+                      if repo_type == 'partial':
+                          src_path = os.path.join(src_dir, repo['source_path'])
+                          if os.path.exists(src_path):
+                              os.makedirs(target_dir, exist_ok=True)
+                              if os.path.exists(target_dir):
+                                  print(f"Removing existing directory: {target_dir}")
+                                  shutil.rmtree(target_dir)
+                              shutil.copytree(src_path, target_dir, ignore_dangling_symlinks=True)
+                              print(f"Partial sync: {repo['source_path']} -> {target_dir}")
+                          else:
+                              print(f"Source path not found: {repo['source_path']}")
+                      else:
+                          if target_dir and target_dir != '.':
+                              os.makedirs(target_dir, exist_ok=True)
+                              if os.path.exists(target_dir):
+                                  print(f"Removing existing directory: {target_dir}")
+                                  shutil.rmtree(target_dir)
+                              shutil.copytree(src_dir, target_dir, ignore_dangling_symlinks=True)
+                              print(f"Full sync to: {target_dir}")
+                          else:
+                              for item in os.listdir(src_dir):
+                                  src_item = os.path.join(src_dir, item)
+                                  dst_item = os.path.join('.', item)
+                                  
+                                  if os.path.isdir(src_item) and item in target_dirs:
+                                      print(f"Skipping {item} (will be overridden by {target_dirs[item]})")
+                                      continue
+                                  
+                                  if os.path.isdir(src_item):
+                                      if os.path.exists(dst_item):
+                                          shutil.rmtree(dst_item)
+                                      shutil.copytree(src_item, dst_item, ignore_dangling_symlinks=True)
+                                  else:
+                                      try:
+                                          shutil.copy2(src_item, dst_item)
+                                      except Exception as e:
+                                          print(f"Skipping file {src_item}: {e}")
+                              print("Full sync to root")
+                              
+                  except Exception as e:
+                      print(f"Failed to sync {repo_name}: {e}")
+          
+          print("All repositories synced")
+          EOF
+
+      - name: Replace files
+        run: |
+          python3 << 'EOF'
+          import toml
+          import os
+          import urllib.request
+          
+          config = toml.load('.github/workflows/sync-config.toml')
+          
+          print("Starting file replacements...")
+          
+          for file_config in config.get('file_replacements', []):
+              name = file_config['name']
+              source_url = file_config['source_url']
+              target_path = file_config['target_path']
+              
+              print(f"Replacing {name} -> {target_path}")
+              
+              try:
+                  os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                  urllib.request.urlretrieve(source_url, target_path)
+                  
+                  if os.path.exists(target_path) and os.path.getsize(target_path) > 0:
+                      file_size = os.path.getsize(target_path)
+                      print(f"Successfully replaced: {target_path} ({file_size} bytes)")
+                  else:
+                      print(f"File may be empty: {target_path}")
+                      
+              except Exception as e:
+                  print(f"Failed to replace {target_path}: {e}")
+          
+          print("File replacements completed")
+          EOF
+
+      - name: Restore workflows
+        run: |
+          if [ -d "/tmp/backup/workflows" ]; then
+            mkdir -p .github/workflows
+            cp -r /tmp/backup/workflows/* .github/workflows/
+            echo "Workflows restored"
+          fi
+
+      - name: Verify results
+        run: |
+          echo "Verifying sync results..."
+          echo "Directory structure:"
+          find . -maxdepth 2 -type d | sort | head -20
+          echo "Key files:"
+          if [ -d "luci-app-lucky" ]; then
+            echo "✓ luci-app-lucky directory"
+          else
+            echo "✗ luci-app-lucky directory missing"
+          fi
+          
+          if [ -d "luci-app-advancedplus" ]; then
+            echo "✓ luci-app-advancedplus directory"
+          else
+            echo "✗ luci-app-advancedplus directory missing"
+          fi
+          
+          if [ -f "luci-app-advancedplus/luasrc/model/cbi/advancedplus/advancededit.lua" ]; then
+            echo "✓ advancededit.lua file"
+          else
+            echo "✗ advancededit.lua file missing"
+          fi
+          
+          if [ -f "luci-app-wechatpush/root/usr/share/wechatpush/api/qywx_markdown.json" ]; then
+            echo "✓ qywx_markdown.json file"
+          else
+            echo "✗ qywx_markdown.json file missing"
+          fi
+
+      - name: Commit changes
+        run: |
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Auto Sync: $(date +'%Y-%m-%d %H:%M')"
+            git push
+            echo "Changes pushed"
+          fi
+
+      - name: Cleanup workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ secrets.REPO_TOKEN }}
+          repository: ${{ github.repository }}
+          retain_days: 2
+          keep_minimum_runs: 6
