@@ -52,3 +52,9 @@ target_dir = "VIKINGYFY/luci-app-timewol"
 name = "qywx_markdown.json"
 source_url = "https://raw.githubusercontent.com/YunHair/luci-app-wechatpush/master/root/usr/share/wechatpush/api/qywx_markdown.json"
 target_path = "luci-app-wechatpush/root/usr/share/wechatpush/api/qywx_markdown.json"
+
+# 新增 advancededit.lua 文件替换
+[[file_replacements]]
+name = "advancededit.lua"
+source_url = "https://raw.githubusercontent.com/YunHair/luci-app-advancedplus/main/luasrc/model/cbi/advancedplus/advancededit.lua"
+target_path = "luci-app-advancedplus/luasrc/model/cbi/advancedplus/advancededit.lua"
