@@ -5,9 +5,17 @@
 name = "kenzok8-small-package"
 url = "https://github.com/kenzok8/small-package"
 branch = "main"
-type = "full"  # full: 完整同步, partial: 部分同步
-target_dir = ""  # 目标目录，空表示根目录
-excludes = [".github/workflows"]  # 排除 workflows 目录，避免覆盖配置
+type = "full"
+target_dir = ""  # 同步到根目录
+excludes = [".github/workflows"]
+
+# 这个配置会覆盖 kenzok8-small-package 中的 luci-app-lucky
+[[repositories]]
+name = "gdy666-lucky"
+url = "https://github.com/gdy666/luci-app-lucky"
+branch = "main"
+type = "full"
+target_dir = "luci-app-lucky"  # 明确指定目标目录
 
 [[repositories]]
 name = "sirpdboy-advancedplus"
@@ -28,7 +36,7 @@ name = "VIKINGYFY-wolplus"
 url = "https://github.com/VIKINGYFY/packages"
 branch = "main"
 type = "partial"
-source_path = "luci-app-wolplus"  # 只同步源仓库的这个文件夹
+source_path = "luci-app-wolplus"
 target_dir = "VIKINGYFY/luci-app-wolplus"
 
 [[repositories]]
@@ -39,7 +47,7 @@ type = "partial"
 source_path = "luci-app-timewol"
 target_dir = "VIKINGYFY/luci-app-timewol"
 
-# 文件替换配置 - 在同步后替换特定文件
+# 文件替换配置
 [[file_replacements]]
 name = "qywx_markdown.json"
 source_url = "https://raw.githubusercontent.com/YunHair/luci-app-wechatpush/master/root/usr/share/wechatpush/api/qywx_markdown.json"
