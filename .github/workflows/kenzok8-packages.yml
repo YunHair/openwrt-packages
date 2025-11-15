@@ -44,6 +44,12 @@ jobs:
           
           config = toml.load('.github/workflows/sync-config.toml')
           
+          # 首先处理需要覆盖的目录，记录哪些目录会被覆盖
+          override_dirs = set()
+          for repo in config['repositories']:
+              if repo.get('target_dir') and repo['target_dir'] != '.':
+                  override_dirs.add(repo['target_dir'])
+          
           for repo in config['repositories']:
               print(f"🔄 Syncing {repo['name']}...")
               
@@ -66,8 +72,9 @@ jobs:
                       target_dir = repo['target_dir']
                       if os.path.exists(src_path):
                           os.makedirs(target_dir, exist_ok=True)
-                          # 清空目标目录（如果存在）
+                          # 检查并删除目标目录（如果存在且需要覆盖）
                           if os.path.exists(target_dir):
+                              print(f"🗑️ Removing existing directory: {target_dir}")
                               shutil.rmtree(target_dir)
                           # 忽略损坏的符号链接
                           shutil.copytree(src_path, target_dir, ignore_dangling_symlinks=True)
@@ -79,17 +86,24 @@ jobs:
                       target_dir = repo.get('target_dir', '.')
                       if target_dir and target_dir != '.':
                           os.makedirs(target_dir, exist_ok=True)
-                          # 清空目标目录（如果存在）
+                          # 检查并删除目标目录（如果存在且需要覆盖）
                           if os.path.exists(target_dir):
+                              print(f"🗑️ Removing existing directory: {target_dir}")
                               shutil.rmtree(target_dir)
                           # 忽略损坏的符号链接
                           shutil.copytree(src_dir, target_dir, ignore_dangling_symlinks=True)
                           print(f"✅ Full sync to: {target_dir}")
                       else:
-                          # 同步到根目录
+                          # 同步到根目录 - 特殊处理可能被覆盖的目录
                           for item in os.listdir(src_dir):
                               src_item = os.path.join(src_dir, item)
                               dst_item = os.path.join('.', item)
+                              
+                              # 如果这个目录后续会被其他仓库覆盖，跳过同步
+                              if os.path.isdir(src_item) and item in override_dirs:
+                                  print(f"⏩ Skipping {item} (will be overridden by another repository)")
+                                  continue
+                              
                               if os.path.isdir(src_item):
                                   if os.path.exists(dst_item):
                                       shutil.rmtree(dst_item)
@@ -127,6 +141,17 @@ jobs:
           
           print("✅ File replacements completed")
           EOF
+
+      - name: Verify directory overrides
+        run: |
+          echo "📁 Checking directory overrides:"
+          if [ -d "luci-app-lucky" ]; then
+            echo "✅ luci-app-lucky directory exists"
+            echo "📊 Contents:"
+            find "luci-app-lucky" -type f -name "*.lua" -o -name "*.js" -o -name "*.html" | head -10
+          else
+            echo "❌ luci-app-lucky directory not found"
+          fi
 
       - name: Commit and push
         run: |
