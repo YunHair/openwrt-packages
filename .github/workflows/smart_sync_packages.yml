@@ -25,6 +25,17 @@ jobs:
       - name: Install dependencies
         run: pip install toml
 
+      - name: Load configuration
+        run: |
+          echo "Loading configuration..."
+          if [ -f ".github/workflows/sync-config.toml" ]; then
+            cp .github/workflows/sync-config.toml /tmp/sync-config.toml
+            echo "Configuration loaded successfully"
+          else
+            echo "Error: sync-config.toml not found"
+            exit 1
+          fi
+
       - name: Backup workflows
         run: |
           mkdir -p /tmp/backup
@@ -45,8 +56,13 @@ jobs:
           import tempfile
           import shutil
           
-          config = toml.load('.github/workflows/sync-config.toml')
-          
+          # 从临时位置加载配置
+          config_path = "/tmp/sync-config.toml"
+          if not os.path.exists(config_path):
+              print(f"Error: Config file not found at {config_path}")
+              exit(1)
+              
+          config = toml.load(config_path)
           print("Starting repository sync...")
           
           target_dirs = {}
@@ -135,7 +151,9 @@ jobs:
           import os
           import urllib.request
           
-          config = toml.load('.github/workflows/sync-config.toml')
+          # 从临时位置加载配置
+          config_path = "/tmp/sync-config.toml"
+          config = toml.load(config_path)
           
           print("Starting file replacements...")
           
