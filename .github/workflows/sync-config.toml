@@ -14,8 +14,18 @@ excludes = [".github/workflows"]
 name = "gdy666-lucky"
 url = "https://github.com/gdy666/luci-app-lucky"
 branch = "main"
-type = "full"
+type = "partial"
+source_path = "lucky"
+target_dir = "lucky"  # 明确指定目标目录
+
+[[repositories]]
+name = "gdy666-luci-app-lucky"
+url = "https://github.com/gdy666/luci-app-lucky"
+branch = "main"
+type = "partial"
+source_path = "luci-app-lucky"
 target_dir = "luci-app-lucky"  # 明确指定目标目录
+
 
 [[repositories]]
 name = "sirpdboy-advancedplus"
